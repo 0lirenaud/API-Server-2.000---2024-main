@@ -255,6 +255,19 @@ function updateDropDownMenu() {
     let DDMenu = $("#DDMenu");
     let selectClass = selectedCategory === "" ? "fa-check" : "fa-fw";
     DDMenu.empty();
+    if(sessionUser == null)
+        DDMenu.append($(`
+            <div class="dropdown-item menuItemLayout" id="connectCmd">
+                <i class="menuIcon fa mx-2"></i> Connexion
+            </div>
+            `));
+    else
+    DDMenu.append($(`
+        <div class="dropdown-item menuItemLayout" id="">
+            <i class="menuIcon fa mx-2"></i> Test
+        </div>
+        `));
+    DDMenu.append($(`<div class="dropdown-divider"></div>`));
     DDMenu.append($(`
         <div class="dropdown-item menuItemLayout" id="allCatCmd">
             <i class="menuIcon fa ${selectClass} mx-2"></i> Toutes les catégories
@@ -287,6 +300,9 @@ function updateDropDownMenu() {
         selectedCategory = $(this).text().trim();
         await showPosts(true);
         updateDropDownMenu();
+    });
+    $('#connectCmd').on("click", async function() {
+        await renderUserConnectForm();
     });
 }
 function attach_Posts_UI_Events_Callback() {

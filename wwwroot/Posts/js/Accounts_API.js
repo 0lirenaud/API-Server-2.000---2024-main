@@ -40,7 +40,7 @@ class Accounts_API {
         Accounts_API.initHttpState();
         return new Promise(resolve => {
             $.ajax({
-                url: '/token',
+                url: 'http://localhost:5000/token',
                 type: "POST",
                 contentType: 'application/json',
                 data: {Email: email, Password: password},

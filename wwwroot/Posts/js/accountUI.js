@@ -14,7 +14,7 @@ function newUser() {
 
 function renderUserForm(user = null){
     let create = user == null;
-    if (create) user = newPost();
+    if (create) user = newUser();
     $("#form").show();
     $("#form").empty();
     $("#form").append(`
@@ -98,6 +98,55 @@ function renderUserForm(user = null){
         }
         else
             showError("Une erreur est survenue! ", Posts_API.currentHttpError);
+    });
+    $('#cancel').on("click", async function () {
+        await showPosts();
+    });
+}
+
+async function renderUserConnectForm() {
+    showForm();
+    $("#form").show();
+    $("#form").empty();
+    $("#form").append(`
+        <form class="form" id="userForm">
+            <input 
+                class="form-control"
+                name="Email"
+                id="Email"
+                placeholder="Courriel"
+                RequireMessage="Veuillez entrer un courriel"
+                InvalidMessage="Courriel introuvable"
+                required
+            />
+            <input 
+                class="form-control"
+                name="Password" 
+                id="Password" 
+                placeholder="Mot de passe"
+                type="password"
+                required
+                RequireMessage="Veuillez entrer un mot de passe"
+                InvalidMessage="Mot de passe incorrecte"
+            />
+
+            <input type="submit" value="Entrer" id="connect" class="btn btn-primary">
+            <input type="button" value="Nouveau compte" id="createNewAccount" class="btn btn-primary">
+        </form>
+    `);
+
+    initFormValidation(); // important do to after all html injection!
+
+    $('#userForm').on("submit", async function (event) {
+        event.preventDefault();
+        let user = getFormData($("#userForm"));
+        user = await Accounts_API.Login(user.Email, user.Password);
+        if (!Accounts_API.error) {
+            sessionUser = user;
+            await showPosts();
+        }
+        else
+            showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
     });
     $('#cancel').on("click", async function () {
         await showPosts();
