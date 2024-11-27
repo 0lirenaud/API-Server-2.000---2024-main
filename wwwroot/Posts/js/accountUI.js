@@ -140,9 +140,9 @@ async function renderUserConnectForm() {
     $('#userForm').on("submit", async function (event) {
         event.preventDefault();
         let user = getFormData($("#userForm"));
-        user = await Accounts_API.Login(user.Email, user.Password);
+        user = await Accounts_API.Login(user);
         if (!Accounts_API.error) {
-            sessionUser = user;
+            sessionUser = user.User;
             await showPosts();
         }
         else

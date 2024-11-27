@@ -261,12 +261,23 @@ function updateDropDownMenu() {
                 <i class="menuIcon fa mx-2"></i> Connexion
             </div>
             `));
-    else
-    DDMenu.append($(`
-        <div class="dropdown-item menuItemLayout" id="">
-            <i class="menuIcon fa mx-2"></i> Test
-        </div>
+    else {
+        DDMenu.append($(`
+            <div class="dropdown-item menuItemLayout" id="userCmd">
+                <img class="userIconMenu" src="${sessionUser.Avatar}"/>
+                <span class="userNameMenu">${sessionUser.Name}</span>
+            </div>
+            <div class="dropdown-divider"></div>
         `));
+        DDMenu.append($(`
+            <div class="dropdown-item menuItemLayout" id="">
+                <i class="menuIcon fa mx-2"></i> Modifier votre profil
+            </div>
+            <div class="dropdown-item menuItemLayout" id="">
+                <i class="menuIcon fa mx-2"></i> Déconnexion
+            </div>
+            `));
+    }
     DDMenu.append($(`<div class="dropdown-divider"></div>`));
     DDMenu.append($(`
         <div class="dropdown-item menuItemLayout" id="allCatCmd">

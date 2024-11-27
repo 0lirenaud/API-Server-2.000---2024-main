@@ -36,14 +36,15 @@ class Accounts_API {
             });
         });
     }
-    static async Login(email, password) {
+    static async Login(data) {
         Accounts_API.initHttpState();
         return new Promise(resolve => {
             $.ajax({
                 url: 'http://localhost:5000/token',
                 type: "POST",
+                dataType: "json",
                 contentType: 'application/json',
-                data: {Email: email, Password: password},
+                data: JSON.stringify(data),
                 success: (data) => { resolve(data); },
                 error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
             })
