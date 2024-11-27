@@ -1,100 +1,145 @@
 //#region User form rendering
+let verifyMessage = `Votre compte a été crée. Veuillez
+                vérifier vos courriels, afin de récupérer votre code de vérification
+                pour votre prochaine connexion. Merci !`
+
+function changeMainTitle(msg = 'Fil de nouvelles'){
+    $('#viewTitle').text(msg)
+}
 function newUser() {
     let User = {};
-    User.Id = "";
+    User.Id = "0";
     User.Name = "";
     User.Email = "";
     User.Password = "";
-    User.Avatar = "";
-    // User.Created après le submit
-    // User.Authorizations après le submit
-    // User.VerifyCode après le submit
+    User.Avatar = "no-avatar.png";
+    User.Created = 0;
+    User.Authorizations = {}
+    User.VerifyCode = ""
     return User;
 }
 
-function renderUserForm(user = null){
+async function renderUserForm(user = null) {
     let create = user == null;
     if (create) user = newUser();
+    changeMainTitle(create ? 'Inscription' : 'Modification');
     $("#form").show();
     $("#form").empty();
     $("#form").append(`
         <form class="form" id="userForm">
-            <input type="hidden" name="Id" value="${user.Id}"/>
-            <input type="hidden" name="Created" value="${user.Created}"/>
-            <label for="Email" class="form-label">Adresse courriel</label>
-            <input 
-                class="form-control"
-                name="Email"
-                id="Email"
-                placeholder="Courriel"
-                required
-                value="${user.Email}"
-            />
-            <input 
-                class="form-control"
-                name="ConfirmEmail"
-                id="ConfirmEmail"
-                placeholder="Vérification"
-                required
-                value="${user.Email}"
-            />
-            <label for="Password" class="form-label">Titre </label>
-            <input 
-                class="form-control"
-                name="Title" 
-                id="Title" 
-                placeholder="Titre"
-                required
-                RequireMessage="Veuillez entrer un titre"
-                InvalidMessage="Le titre comporte un caractère illégal"
-                value="${post.Title}"
-            />
-            <label for="Url" class="form-label">Texte</label>
-            <textarea class="form-control" 
-                        name="Text" 
-                        id="Text"
-                        placeholder="Texte" 
-                        rows="9"
-                        required 
-                        RequireMessage = 'Veuillez entrer une Description'>${post.Text}</textarea>
+            <input type="hidden" name="Id" id="Id" value="${user.Id}"/>
+            <input type="hidden" name="Created" id="Created" value="${user.Created}"/>
 
-            <label class="form-label">Image </label>
-            <div class='imageUploaderContainer'>
-                <div class='imageUploader' 
-                    newImage='${create}' 
-                    controlId='Image' 
-                    imageSrc='${post.Image}' 
-                    waitingImage="Loading_icon.gif">
+            <fieldset>
+                <label for="Email" class="form-label">Adresse courriel</label>
+                <input 
+                    class="form-control"
+                    name="Email"
+                    id="Email"
+                    placeholder="Courriel"
+                    required
+                    RequireMessage="Veuillez entrer un courriel"
+                    CustomErrorMessage="Les courriels ne sont pas identiques"
+                    InvalidMessage="Le format du courriel est invalide"
+                    value="${user.Email}"
+                />
+                <input 
+                    class="form-control MatchedInput"
+                    matchedInputId="Email"
+                    name="ConfirmEmail"
+                    id="ConfirmEmail"
+                    placeholder="Vérification"
+                    required
+                    RequireMessage="Veuillez entrer un courriel"
+                    CustomErrorMessage="Les courriels ne sont pas identiques"
+                    InvalidMessage="Le format du courriel est invalide"
+                    value="${user.Email}"
+                />
+            </fieldset>
+
+            <fieldset>
+                <label for="Password" class="form-label">Mot de passe</label>
+                <input
+                    type="password"
+                    class="form-control"
+                    name="Password" 
+                    id="Password" 
+                    placeholder="Mot de passe"
+                    required
+                    RequireMessage="Veuillez entrer un mot de passe"
+                    InvalidMessage="Le mot de passe requiert 6 caractères minium sans espaces"
+                    CustomErrorMessage="Les mots de passes ne sont pas identiques"
+                    value="${user.Password}"
+                />
+                <input
+                    type="password"
+                    class="form-control MatchedInput"
+                    matchedInputId="Password"
+                    name="ConfirmPassword" 
+                    id="ConfirmPassword" 
+                    placeholder="Vérification"
+                    required
+                    RequireMessage="Veuillez confirmer votre mot de passe"
+                    InvalidMessage="Le mot de passe requiert 6 caractères minium sans espaces"
+                    CustomErrorMessage="Les mots de passes ne sont pas identiques"
+                    value="${user.Password}"
+                />
+            </fieldset>
+
+            <fieldset>
+                <label for="Name" class="form-label">Nom</label>
+                <input
+                    class="form-control"
+                    name="Name"
+                    id="Name"
+                    placeholder="Nom"
+                    required
+                    RequireMessage="Veuillez entrer un nom"
+                    value="${user.Name}"
+                />
+            </fieldset>
+
+            <fieldset>
+                <label class="form-label">Avatar</label>
+                <div class='imageUploaderContainer'>
+                    <div class='imageUploader' 
+                        newImage='${create}' 
+                        controlId='Image' 
+                        imageSrc='${user.Avatar}' 
+                        waitingImage="Loading_icon.gif">
+                    </div>
                 </div>
+            </fieldset>
+
+            <div>
+                <input
+                    type="submit" 
+                    value="Enregistrer" 
+                    id="saveUser" 
+                    class="btn btn-primary"
+                />
+                <input
+                    type="button"
+                    value="Annuler"
+                    id="cancel"
+                    class="btn cancelUser"
+                />
             </div>
-            <div id="keepDateControl">
-                <input type="checkbox" name="keepDate" id="keepDate" class="checkbox" checked>
-                <label for="keepDate"> Conserver la date de création </label>
-            </div>
-            <input type="submit" value="Enregistrer" id="savePost" class="btn btn-primary displayNone">
         </form>
     `);
-    if (create) $("#keepDateControl").hide();
 
     initImageUploaders();
     initFormValidation(); // important do to after all html injection!
-
-    $("#commit").click(function () {
-        $("#commit").off();
-        return $('#savePost').trigger("click");
-    });
-    $('#postForm').on("submit", async function (event) {
+    addConflictValidation(Accounts_API.API_URL(),'Email','submit');
+    $('#userForm').on("submit", async function (event) {
         event.preventDefault();
-        let post = getFormData($("#postForm"));
-        if (post.Category != selectedCategory)
-            selectedCategory = "";
-        if (create || !('keepDate' in post))
-            post.Date = Local_to_UTC(Date.now());
-        delete post.keepDate;
-        post = await Posts_API.Save(post, create);
+        let user = getFormData($("#userForm"));
+        user = await Accounts_API.Save(user, create);
         if (!Posts_API.error) {
-            await showPosts();
-            postsPanel.scrollToElem(post.Id);
+            if(create)
+                await renderUserConnectForm(verifyMessage)
+            else
+                await showPosts();
         }
         else
             showError("Une erreur est survenue! ", Posts_API.currentHttpError);
@@ -103,12 +148,13 @@ function renderUserForm(user = null){
         await showPosts();
     });
 }
-
-async function renderUserConnectForm() {
-    showForm();
-    $("#form").show();
-    $("#form").empty();
+async function renderUserConnectForm(instructMsg = "") {
+    hidePosts();
+    $('#form').show();
+    $('#abort').show();
+    changeMainTitle('Connexion');
     $("#form").append(`
+        <div id="instructions" style="display:${instructMsg ? "block" : "none"}">${instructMsg}</div>
         <form class="form" id="userForm">
             <input 
                 class="form-control"
@@ -147,6 +193,9 @@ async function renderUserConnectForm() {
         }
         else
             showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
+    });
+    $('#createNewAccount').on("click", async function () {
+        await renderUserForm();
     });
     $('#cancel').on("click", async function () {
         await showPosts();

@@ -258,7 +258,7 @@ function updateDropDownMenu() {
     if(sessionUser == null)
         DDMenu.append($(`
             <div class="dropdown-item menuItemLayout" id="connectCmd">
-                <i class="menuIcon fa mx-2"></i> Connexion
+                <i class="menuIcon fa mx-2 fa-sign-in"></i> Connexion
             </div>
             `));
     else {
