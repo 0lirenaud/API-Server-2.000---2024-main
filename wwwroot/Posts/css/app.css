@@ -82,7 +82,19 @@ body {
     scrollbar-gutter: stable;
     margin: auto;
 }
-
+.MatchedInput{
+    margin-top: 10px;
+}
+.cancelUser{
+    background-color: gray;
+    color: white
+}
+fieldset{
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
 .scrollPanel {
     height: 100%;
     overflow-x: hidden;

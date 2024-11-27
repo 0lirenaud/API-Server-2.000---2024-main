@@ -120,7 +120,7 @@ export default class AccountsController extends Controller {
             user.Created = utilities.nowInSeconds();
             let verifyCode = utilities.makeVerifyCode(6);
             user.VerifyCode = verifyCode;
-            user.Authorizations = AccessControl.user();
+            user.Authorizations = AccessControl.userReadOnly();
             let newUser = this.repository.add(user);
             if (this.repository.model.state.isValid) {
                 this.HttpContext.response.created(newUser);

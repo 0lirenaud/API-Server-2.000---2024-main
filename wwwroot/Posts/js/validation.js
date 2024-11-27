@@ -125,6 +125,7 @@ function DelayedConflictTestRequest(serviceUrl, fieldName) {
 function Conflict() {
     return conflict;
 }
+// à utiliser après submit
 function addConflictValidation(serviceUrl, fieldName, submitBtnId) {
     let fieldControl = $('#' + fieldName);
     fieldControl.on("keyup", () => { DelayedConflictTestRequest(serviceUrl, fieldName) });
