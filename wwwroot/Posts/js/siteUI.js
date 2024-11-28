@@ -217,19 +217,14 @@ function renderPost(post, loggedUser) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
     // let response = Accounts_API.Get(post.IdUser);
     // let user = response.data;
-    // let crudIcon = "";
-    // if (sessionUser != null || sessionUser != undefined)
-    //     crudIcon = sessionUser.Id == user.Id || isAdmin(sessionUser) ? 
-    //         `
-    //         <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
-    //         <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
-    //         ` : "";
-
-    crudIcon = 
+    let crudIcon = "";
+    if (sessionUser != null)
+        crudIcon = sessionUser.Id == post.IdUser || isAdmin(sessionUser) ? 
             `
             <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
             <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
-            `;
+            ` : "";
+
             // <div class="postUserContainer">
             //     <img class="userIconMenu" src="${user.Avatar}" alt="User avatar" />
             //     <span class="postUserName">${user.Name}</span>

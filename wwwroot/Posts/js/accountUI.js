@@ -204,7 +204,7 @@ async function renderUserConnectForm(instructMsg = "") {
         if (!Accounts_API.error) {
             sessionUser = response.User;
             await showPosts();
-            initTimeout(10, logout);
+            initTimeout(TIMEOUT_TIME, logout);
             timeout();
         }
         else
