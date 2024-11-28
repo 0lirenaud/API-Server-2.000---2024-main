@@ -1,4 +1,10 @@
 //#region User form rendering
+const TIMEOUT_TIME = 1800
+let sessionUser = sessionStorage.getItem('user') == 'undefined' ? null : JSON.parse(sessionStorage.getItem('user'));
+if(sessionUser != null) {
+    initTimeout(TIMEOUT_TIME, logout);
+    timeout();
+}
 let verifyMessage = `Votre compte a été crée. Veuillez
                 vérifier vos courriels, afin de récupérer votre code de vérification
                 pour votre prochaine connexion. Merci !`
@@ -17,6 +23,14 @@ function newUser() {
     User.Authorizations = {}
     User.VerifyCode = ""
     return User;
+}
+
+function isAdmin(user) {
+    return user.Authorizations.readAccess == 3 && user.Authorizations.writeAccess == 3;
+}
+
+function isSuperUser(user) {
+    return user.Authorizations.readAccess == 2 && user.Authorizations.writeAccess == 2;
 }
 
 async function renderUserForm(user = null) {
@@ -190,6 +204,8 @@ async function renderUserConnectForm(instructMsg = "") {
         if (!Accounts_API.error) {
             sessionUser = response.User;
             await showPosts();
+            initTimeout(10, logout);
+            timeout();
         }
         else
             showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
@@ -200,5 +216,16 @@ async function renderUserConnectForm(instructMsg = "") {
     $('#abort').on("click", async function () {
         await showPosts();
     });
+}
+
+async function logout() {
+    await Accounts_API.Logout(sessionUser.Id);
+        if (!Accounts_API.error) {
+            sessionUser = null;
+            await renderUserConnectForm();
+            noTimeout();
+        }
+        else
+            showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
 }
 //#endregion

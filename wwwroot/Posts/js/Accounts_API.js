@@ -45,7 +45,7 @@ class Accounts_API {
         Accounts_API.initHttpState();
         return new Promise(resolve => {
             $.ajax({
-                url: this.API_URL() + (id != null ? "/" + id : ""),
+                url: this.API_URL() + (id != null ? "/index/" + id : ""),
                 headers: this.headerAccessToken,
                 complete: data => { resolve({ ETag: data.getResponseHeader('ETag'), data: data.responseJSON }); },
                 error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }

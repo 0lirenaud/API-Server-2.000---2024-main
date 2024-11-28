@@ -16,11 +16,14 @@ let itemLayout;
 let waiting = null;
 let showKeywords = false;
 let keywordsOnchangeTimger = null;
-let sessionUser = sessionStorage.getItem('user') == 'undefined' ? null : JSON.parse(sessionStorage.getItem('user'));
 
 Init_UI();
 async function Init_UI() {
     postsPanel = new PageManager('postsScrollPanel', 'postsPanel', 'postSample', renderPosts);
+    if(sessionUser != null && sessionUser != 'undefined')
+        if(isSuperUser(sessionUser) || isAdmin(sessionUser))
+            $('#createPost').show();
+
     $('#createPost').on("click", async function () {
         showCreatePostForm();
     });
@@ -91,7 +94,9 @@ function toogleShowKeywords() {
 
 //#region Views management
 function intialView() {
-    $("#createPost").show();
+    if(sessionUser != null && sessionUser != 'undefined')
+        if(isSuperUser(sessionUser) || isAdmin(sessionUser))
+            $("#createPost").show();
     $("#hiddenIcon").hide();
     $("#hiddenIcon2").hide();
     $('#menu').show();
@@ -194,8 +199,8 @@ async function renderPosts(queryString) {
         currentETag = response.ETag;
         let Posts = response.data;
         if (Posts.length > 0) {
-            Posts.forEach(Post => {
-                postsPanel.itemsPanel.append(renderPost(Post));
+            Posts.forEach(Post =>  {
+                postsPanel.itemsPanel.append( renderPost(Post));
             });
         } else
             endOfData = true;
@@ -210,12 +215,26 @@ async function renderPosts(queryString) {
 }
 function renderPost(post, loggedUser) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
-    let crudIcon =
-        `
-        <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
-        <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
-        `;
+    // let response = Accounts_API.Get(post.IdUser);
+    // let user = response.data;
+    // let crudIcon = "";
+    // if (sessionUser != null || sessionUser != undefined)
+    //     crudIcon = sessionUser.Id == user.Id || isAdmin(sessionUser) ? 
+    //         `
+    //         <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
+    //         <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
+    //         ` : "";
 
+    crudIcon = 
+            `
+            <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
+            <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
+            `;
+            // <div class="postUserContainer">
+            //     <img class="userIconMenu" src="${user.Avatar}" alt="User avatar" />
+            //     <span class="postUserName">${user.Name}</span>
+            //     <div class="postDate"> ${date} </div>
+            // </div>
     return $(`
         <div class="post" id="${post.Id}">
             <div class="postHeader">
@@ -316,13 +335,7 @@ function updateDropDownMenu() {
         await renderUserConnectForm();
     });
     $('#logoutCmd').on("click", async function() {
-        await Accounts_API.Logout(sessionUser.Id);
-        if (!Accounts_API.error) {
-            sessionUser = null;
-            await renderUserConnectForm();
-        }
-        else
-            showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
+        await logout();
     });
 }
 function attach_Posts_UI_Events_Callback() {

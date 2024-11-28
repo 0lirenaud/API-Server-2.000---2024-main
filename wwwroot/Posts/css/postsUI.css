@@ -79,11 +79,11 @@
 }
 
 .postDate {
-    margin-top: 4px;
     font-size: 10px;
-    margin-bottom: 20px;
     color: gray;
     text-align: right;
+    margin-left: auto;
+    align-self: flex-start;
 }
 
 .postOwnerAndDate {
@@ -104,6 +104,15 @@
 .postTextContainer {
     height: 66px;
 }
+
+.postUserContainer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    margin-top: 4px;
+ }
 
 .postfooter {
     text-align: center;
