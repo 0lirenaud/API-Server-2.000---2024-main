@@ -8,7 +8,7 @@ function createTimeoutPopup() {
                 </div>
                 <div onclick='closePopup(); ' class='close-btn fa fa-close'></div> 
             </div>
-        
+           
         </div> 
     `);
 }

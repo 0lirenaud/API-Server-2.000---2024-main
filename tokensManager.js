@@ -1,4 +1,3 @@
-
 import * as utilities from './utilities.js';
 import * as ServerVariables from "./serverVariables.js";
 import crypto from 'crypto';
@@ -89,8 +88,8 @@ export default
                 }
                 return token;
             }
-            return null;
         }
+        return null;
     }
     static getUser(req) {
         if (req.headers["authorization"] != undefined) {
@@ -103,5 +102,3 @@ export default
         return null;
     }
 }
-
-
