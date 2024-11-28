@@ -21,7 +21,7 @@ Init_UI();
 async function Init_UI() {
     postsPanel = new PageManager('postsScrollPanel', 'postsPanel', 'postSample', renderPosts);
     if(sessionUser != null && sessionUser != 'undefined')
-        if(isSuperUser(sessionUser) || isAdmin(sessionUser))
+        if(sessionUser.isSuperUser || sessionUser.isAdmin)
             $('#createPost').show();
 
     $('#createPost').on("click", async function () {
@@ -95,7 +95,7 @@ function toogleShowKeywords() {
 //#region Views management
 function intialView() {
     if(sessionUser != null && sessionUser != 'undefined')
-        if(isSuperUser(sessionUser) || isAdmin(sessionUser))
+        if(sessionUser.isSuperUser || sessionUser.isAdmin)
             $("#createPost").show();
     $("#hiddenIcon").hide();
     $("#hiddenIcon2").hide();
@@ -199,9 +199,12 @@ async function renderPosts(queryString) {
         currentETag = response.ETag;
         let Posts = response.data;
         if (Posts.length > 0) {
-            Posts.forEach(Post =>  {
-                postsPanel.itemsPanel.append( renderPost(Post));
-            });
+            for(const Post of Posts) {
+                postsPanel.itemsPanel.append(await renderPost(Post));
+            }
+            // Posts.forEach(Post =>  {
+            //     postsPanel.itemsPanel.append( renderPost(Post));
+            // });
         } else
             endOfData = true;
         linefeeds_to_Html_br(".postText");
@@ -213,23 +216,18 @@ async function renderPosts(queryString) {
     removeWaitingGif();
     return endOfData;
 }
-function renderPost(post, loggedUser) {
+async function renderPost(post, loggedUser) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
-    // let response = Accounts_API.Get(post.IdUser);
-    // let user = response.data;
+    let response = await Accounts_API.Get(post.IdUser);
+    let user = response.data;
     let crudIcon = "";
     if (sessionUser != null)
-        crudIcon = sessionUser.Id == post.IdUser || isAdmin(sessionUser) ? 
+        crudIcon = sessionUser.Id == post.IdUser || sessionUser.isAdmin ? 
             `
             <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
             <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
             ` : "";
 
-            // <div class="postUserContainer">
-            //     <img class="userIconMenu" src="${user.Avatar}" alt="User avatar" />
-            //     <span class="postUserName">${user.Name}</span>
-            //     <div class="postDate"> ${date} </div>
-            // </div>
     return $(`
         <div class="post" id="${post.Id}">
             <div class="postHeader">
@@ -238,7 +236,11 @@ function renderPost(post, loggedUser) {
             </div>
             <div class="postTitle"> ${post.Title} </div>
             <img class="postImage" src='${post.Image}'/>
-            <div class="postDate"> ${date} </div>
+            <div class="postUserContainer">
+                <img class="userIconMenu" src="${user.Avatar}" alt="User avatar" />
+                <span class="postUserName">${user.Name}</span>
+                <div class="postDate"> ${date} </div>
+            </div>
             <div postId="${post.Id}" class="postTextContainer hideExtra">
                 <div class="postText" >${post.Text}</div>
             </div>
@@ -482,6 +484,7 @@ function newPost() {
     Post.Text = "";
     Post.Image = "news-logo-upload.png";
     Post.Category = "";
+    Post.IdUser = sessionUser.Id;
     return Post;
 }
 function renderPostForm(post = null) {
@@ -493,6 +496,7 @@ function renderPostForm(post = null) {
         <form class="form" id="postForm">
             <input type="hidden" name="Id" value="${post.Id}"/>
             <input type="hidden" name="Date" value="${post.Date}"/>
+            <input type=hidden" name="IdUser" value="${post.IdUser}"/>
             <label for="Category" class="form-label">Catégorie </label>
             <input 
                 class="form-control"

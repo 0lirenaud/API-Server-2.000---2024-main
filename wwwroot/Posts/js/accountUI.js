@@ -25,10 +25,6 @@ function newUser() {
     return User;
 }
 
-function isAdmin(user) {
-    return user.Authorizations.readAccess == 3 && user.Authorizations.writeAccess == 3;
-}
-
 function isSuperUser(user) {
     return user.Authorizations.readAccess == 2 && user.Authorizations.writeAccess == 2;
 }
