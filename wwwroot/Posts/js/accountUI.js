@@ -186,9 +186,9 @@ async function renderUserConnectForm(instructMsg = "") {
     $('#userForm').on("submit", async function (event) {
         event.preventDefault();
         let user = getFormData($("#userForm"));
-        user = await Accounts_API.Login(user);
+        let response = await Accounts_API.Login(user);
         if (!Accounts_API.error) {
-            sessionUser = user.User;
+            sessionUser = response.User;
             await showPosts();
         }
         else
@@ -197,7 +197,7 @@ async function renderUserConnectForm(instructMsg = "") {
     $('#createNewAccount').on("click", async function () {
         await renderUserForm();
     });
-    $('#cancel').on("click", async function () {
+    $('#abort').on("click", async function () {
         await showPosts();
     });
 }

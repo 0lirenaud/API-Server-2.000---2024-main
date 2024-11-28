@@ -243,3 +243,17 @@ label {
 .displayNone {
     display:none;
 }
+
+.userIconMenu {
+    width: 45px;
+    height: 45px;
+    min-width: 45px;
+    min-height: 45px;
+    border-radius: 100%;
+    object-fit: cover;
+ }
+ 
+ #userCmd {
+    grid-template-columns: auto auto;
+    font-weight: bold;
+ }

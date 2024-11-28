@@ -16,7 +16,7 @@ let itemLayout;
 let waiting = null;
 let showKeywords = false;
 let keywordsOnchangeTimger = null;
-let sessionUser = null;
+let sessionUser = sessionStorage.getItem('user') == 'undefined' ? null : JSON.parse(sessionStorage.getItem('user'));
 
 Init_UI();
 async function Init_UI() {
@@ -37,7 +37,7 @@ async function Init_UI() {
 
     installKeywordsOnkeyupEvent();
     await showPosts();
-    start_Periodic_Refresh();
+    //start_Periodic_Refresh();
 }
 
 //#region Search keywords UI
@@ -271,10 +271,10 @@ function updateDropDownMenu() {
         `));
         DDMenu.append($(`
             <div class="dropdown-item menuItemLayout" id="">
-                <i class="menuIcon fa mx-2"></i> Modifier votre profil
+                <i class="menuIcon fa-solid fa-user-pen mx-2"></i> Modifier votre profil
             </div>
-            <div class="dropdown-item menuItemLayout" id="">
-                <i class="menuIcon fa mx-2"></i> Déconnexion
+            <div class="dropdown-item menuItemLayout" id="logoutCmd">
+                <i class="menuIcon fa-solid fa-arrow-right-from-bracket mx-2"></i> Déconnexion
             </div>
             `));
     }
@@ -314,6 +314,15 @@ function updateDropDownMenu() {
     });
     $('#connectCmd').on("click", async function() {
         await renderUserConnectForm();
+    });
+    $('#logoutCmd').on("click", async function() {
+        await Accounts_API.Logout(sessionUser.Id);
+        if (!Accounts_API.error) {
+            sessionUser = null;
+            await renderUserConnectForm();
+        }
+        else
+            showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
     });
 }
 function attach_Posts_UI_Events_Callback() {

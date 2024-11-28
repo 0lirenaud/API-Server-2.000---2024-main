@@ -1,6 +1,21 @@
 
 class Accounts_API {
-    static API_URL() { return "http://localhost:5000/api/accounts" };
+    static API_URL() { return "http://localhost:5000/accounts" };
+    static setSessionUser(user) {
+        sessionStorage.setItem('user', JSON.stringify(user));
+    }
+    static setAccessToken(token) {
+        sessionStorage.setItem('access_Token', token);
+    }
+    static removeSessionUser() {
+        sessionStorage.removeItem('user');
+    }
+    static removeAccessToken() {
+        sessionStorage.removeItem('access_Token');
+    }
+    static headerAccessToken() {
+        return {"authorization": "Bearer " + sessionStorage.getItem('access_Token')}
+    }
     static initHttpState() {
         this.currentHttpError = "";
         this.currentStatus = 0;
@@ -31,6 +46,7 @@ class Accounts_API {
         return new Promise(resolve => {
             $.ajax({
                 url: this.API_URL() + (id != null ? "/" + id : ""),
+                headers: this.headerAccessToken,
                 complete: data => { resolve({ ETag: data.getResponseHeader('ETag'), data: data.responseJSON }); },
                 error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
             });
@@ -45,17 +61,23 @@ class Accounts_API {
                 dataType: "json",
                 contentType: 'application/json',
                 data: JSON.stringify(data),
-                success: (data) => { resolve(data); },
+                success: (data) => { resolve(data); this.setSessionUser(data.User); this.setAccessToken(data.Access_token) },
                 error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
             })
         });
     }
-    static async Logout() {
+    static async Logout(id) {
         Accounts_API.initHttpState();
         return new Promise(resolve => {
             $.ajax({
-                url: this.API_URL + '/logout',
-                complete: (data) => { resolve({ ETag: data.getResponseHeader('ETag'), data: data.responseJSON }); },
+                url: this.API_URL() + '/logout',
+                data: {userId: id},
+                headers: this.headerAccessToken(),
+                complete: (data) => { 
+                    this.removeSessionUser();
+                    this.removeAccessToken();
+                    resolve(true); 
+                },
                 error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
             })
         });
@@ -68,6 +90,7 @@ class Accounts_API {
                 type: create ? "POST" : "PUT",
                 contentType: 'application/json',
                 data: JSON.stringify(data),
+                headers: this.headerAccessToken,
                 success: (data) => { resolve(data); },
                 error: (xhr) => { Posts_API.setHttpErrorState(xhr); resolve(null); }
             });
