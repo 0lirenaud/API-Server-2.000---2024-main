@@ -1,7 +1,14 @@
 //#region User form rendering
-var verifyMessage = `Votre compte a été crée. Veuillez
-                vérifier vos courriels, afin de récupérer votre code de vérification
-                pour votre prochaine connexion. Merci !`
+const TIMEOUT_TIME = 1800
+let sessionUser = sessionStorage.getItem('user') == 'undefined' ? null : JSON.parse(sessionStorage.getItem('user'));
+if (sessionUser != null) {
+    initTimeout(TIMEOUT_TIME, logout);
+    timeout();
+}
+let verifyMessage = `
+    Votre compte a été crée. Veuillez
+    vérifier vos courriels, afin de récupérer votre code de vérification
+    pour votre prochaine connexion. Merci !`
 var userToVerify;
 
 function changeMainTitle(msg = 'Fil de nouvelles', color = null) {
@@ -20,6 +27,9 @@ function newUser() {
     User.VerifyCode = ""
     return User;
 }
+function isSuperUser(user) {
+    return user.Authorizations.readAccess == 2 && user.Authorizations.writeAccess == 2;
+}
 async function renderVerification(errorMsg = "") {
     $('#form').show();
     $('#form').empty();
@@ -31,7 +41,6 @@ async function renderVerification(errorMsg = "") {
             <input class="btn btn-primary" type="submit" value="Vérifier" />
         </form>
     `);
-
     $('#verifyForm').on('submit', async function (event) {
         event.preventDefault();
         let code = $("#verifyInput").val();
@@ -231,9 +240,11 @@ async function renderUserConnectForm(instructMsg = "") {
             if (response.Authorizations) {
                 sessionUser = response;
                 await showPosts();
+                initTimeout(TIMEOUT_TIME, logout);
+                timeout();
             }
             else {
-                userToVerify = { ...user, ...response};
+                userToVerify = { ...user, ...response };
                 await renderVerification();
             }
         }
@@ -269,3 +280,14 @@ async function renderUsersList() {
     `);
 }
 //#endregion
+
+async function logout() {
+    await Accounts_API.Logout(sessionUser.Id);
+    if (!Accounts_API.error) {
+        sessionUser = null;
+        await renderUserConnectForm();
+        noTimeout();
+    }
+    else
+        showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
+}

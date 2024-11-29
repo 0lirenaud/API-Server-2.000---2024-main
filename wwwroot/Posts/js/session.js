@@ -26,7 +26,7 @@ function initTimeout(stallingTime = infinite, callback = timeoutCallBack) {
     initialized = true;
 }
 function noTimeout() {
-    $(".popup").hide();
+    $(".popup").remove();
     clearTimeout(currentTimeouID);
 }
 function timeout() {
