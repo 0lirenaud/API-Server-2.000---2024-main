@@ -15,8 +15,7 @@ export default class AccountsController extends Controller {
             if (AccessControl.readGranted(this.HttpContext.authorizations, AccessControl.admin()))
                 this.HttpContext.response.JSON(this.repository.get(id));
             else
-                this.HttpContext.response.unAuthorized("Unauthorized access");
-        }
+6        }
         else {
             if (AccessControl.granted(this.HttpContext.authorizations, AccessControl.admin()))
                 this.HttpContext.response.JSON(this.repository.getAll(this.HttpContext.path.params), this.repository.ETag, false, AccessControl.admin());
@@ -92,7 +91,7 @@ export default class AccountsController extends Controller {
                         this.HttpContext.response.unprocessable();
                     }
                 } else {
-                    this.HttpContext.response.unverifiedUser("Verification code does not matched.");
+                    this.HttpContext.response.unverifiedUser("Verification code does not match.");
                 }
             } else {
                 this.HttpContext.response.unprocessable();
@@ -113,7 +112,6 @@ export default class AccountsController extends Controller {
         } else
             this.HttpContext.response.JSON(false);
     }
-
     // POST: account/register body payload[{"Id": 0, "Name": "...", "Email": "...", "Password": "..."}]
     register(user) {
         if (this.repository != null) {
@@ -124,7 +122,7 @@ export default class AccountsController extends Controller {
             let newUser = this.repository.add(user);
             if (this.repository.model.state.isValid) {
                 this.HttpContext.response.created(newUser);
-                newUser.Verifycode = verifyCode;
+                newUser.VerifyCode = verifyCode;
                 this.sendVerificationEmail(newUser);
             } else {
                 if (this.repository.model.state.inConflict)

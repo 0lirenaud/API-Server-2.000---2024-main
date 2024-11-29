@@ -1,10 +1,12 @@
 //#region User form rendering
-let verifyMessage = `Votre compte a été crée. Veuillez
+var verifyMessage = `Votre compte a été crée. Veuillez
                 vérifier vos courriels, afin de récupérer votre code de vérification
                 pour votre prochaine connexion. Merci !`
+var userToVerify;
 
-function changeMainTitle(msg = 'Fil de nouvelles'){
-    $('#viewTitle').text(msg)
+function changeMainTitle(msg = 'Fil de nouvelles', color = null) {
+    $('#viewTitle').text(msg);
+    $('#viewTitle').css('color', color || 'black');
 }
 function newUser() {
     let User = {};
@@ -18,7 +20,45 @@ function newUser() {
     User.VerifyCode = ""
     return User;
 }
+async function renderVerification(errorMsg = "") {
+    $('#form').show();
+    $('#form').empty();
+    $("#form").append(`
+        <form class="form" id="verifyForm">
+            <label for="verifyInput" class="form-label">Veuillez entrer le code de vérification que vous aviez reçu par courriel</label>
+            <input class="form-control" placeholder="Code de vérification" id="verifyInput" name="verifyInput"/>
+            <span id="errorMsg" style="display:${errorMsg ? "block" : "none"}; color:'red'; font-weight:'bold';">${errorMsg}</span>
+            <input class="btn btn-primary" type="submit" value="Vérifier" />
+        </form>
+    `);
 
+    $('#verifyForm').on('submit', async function (event) {
+        event.preventDefault();
+        let code = $("#verifyInput").val();
+        if (code === "")
+            renderVerification('Veuillez saisir une entrée dans ce champ');
+        else {
+            let response = await Accounts_API.Verify(userToVerify.Id, code);
+            if (typeof response === 'string') // Error detected
+                renderVerification(response);
+            else {
+                let verifiedCredentials = {
+                    Email: userToVerify.Email,
+                    Password: userToVerify.Password,
+                    VerifyCode: "verified"
+                }
+                let connectedUser = await Accounts_API.Login(verifiedCredentials);
+                sessionUser = connectedUser;
+                await showPosts();
+                changeMainTitle(`Bienvenue ${userToVerify.Name}!`, 'rgb(0, 87, 204)');
+            }
+        }
+    });
+    $('#verifyInput').on('keydown', function (e) {
+        if (e.key === "Enter") $('input[type="submit"]').click();
+    });
+    $('#abort').on("click", async function () { await showPosts(); });
+}
 async function renderUserForm(user = null) {
     let create = user == null;
     if (create) user = newUser();
@@ -33,13 +73,13 @@ async function renderUserForm(user = null) {
             <fieldset>
                 <label for="Email" class="form-label">Adresse courriel</label>
                 <input 
-                    class="form-control"
+                    class="form-control Email"
                     name="Email"
                     id="Email"
                     placeholder="Courriel"
                     required
                     RequireMessage="Veuillez entrer un courriel"
-                    CustomErrorMessage="Les courriels ne sont pas identiques"
+                    CustomErrorMessage="Le courriel est déjà utilisé"
                     InvalidMessage="Le format du courriel est invalide"
                     value="${user.Email}"
                 />
@@ -51,8 +91,7 @@ async function renderUserForm(user = null) {
                     placeholder="Vérification"
                     required
                     RequireMessage="Veuillez entrer un courriel"
-                    CustomErrorMessage="Les courriels ne sont pas identiques"
-                    InvalidMessage="Le format du courriel est invalide"
+                    InvalidMessage="Les courriels ne sont pas identiques"
                     value="${user.Email}"
                 />
             </fieldset>
@@ -68,7 +107,6 @@ async function renderUserForm(user = null) {
                     required
                     RequireMessage="Veuillez entrer un mot de passe"
                     InvalidMessage="Le mot de passe requiert 6 caractères minium sans espaces"
-                    CustomErrorMessage="Les mots de passes ne sont pas identiques"
                     value="${user.Password}"
                 />
                 <input
@@ -80,8 +118,7 @@ async function renderUserForm(user = null) {
                     placeholder="Vérification"
                     required
                     RequireMessage="Veuillez confirmer votre mot de passe"
-                    InvalidMessage="Le mot de passe requiert 6 caractères minium sans espaces"
-                    CustomErrorMessage="Les mots de passes ne sont pas identiques"
+                    InvalidMessage="Les mots de passes ne sont pas identiques"
                     value="${user.Password}"
                 />
             </fieldset>
@@ -104,8 +141,8 @@ async function renderUserForm(user = null) {
                 <div class='imageUploaderContainer'>
                     <div class='imageUploader' 
                         newImage='${create}' 
-                        controlId='Image' 
-                        imageSrc='${user.Avatar}' 
+                        controlId='Avatar' 
+                        imageSrc='${user.Avatar}'
                         waitingImage="Loading_icon.gif">
                     </div>
                 </div>
@@ -130,13 +167,16 @@ async function renderUserForm(user = null) {
 
     initImageUploaders();
     initFormValidation(); // important do to after all html injection!
-    addConflictValidation(Accounts_API.API_URL(),'Email','submit');
+    addConflictValidation(Accounts_API.CONFLICT_URL(), 'Email', 'submit');
+
     $('#userForm').on("submit", async function (event) {
         event.preventDefault();
         let user = getFormData($("#userForm"));
+        delete user.ConfirmEmail;
+        delete user.ConfirmPassword;
         user = await Accounts_API.Save(user, create);
         if (!Posts_API.error) {
-            if(create)
+            if (create)
                 await renderUserConnectForm(verifyMessage)
             else
                 await showPosts();
@@ -151,6 +191,7 @@ async function renderUserForm(user = null) {
 async function renderUserConnectForm(instructMsg = "") {
     hidePosts();
     $('#form').show();
+    $('#form').empty();
     $('#abort').show();
     changeMainTitle('Connexion');
     $("#form").append(`
@@ -180,7 +221,6 @@ async function renderUserConnectForm(instructMsg = "") {
             <input type="button" value="Nouveau compte" id="createNewAccount" class="btn btn-primary">
         </form>
     `);
-
     initFormValidation(); // important do to after all html injection!
 
     $('#userForm').on("submit", async function (event) {
@@ -188,8 +228,14 @@ async function renderUserConnectForm(instructMsg = "") {
         let user = getFormData($("#userForm"));
         let response = await Accounts_API.Login(user);
         if (!Accounts_API.error) {
-            sessionUser = response.User;
-            await showPosts();
+            if (response.Authorizations) {
+                sessionUser = response;
+                await showPosts();
+            }
+            else {
+                userToVerify = { ...user, ...response};
+                await renderVerification();
+            }
         }
         else
             showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
@@ -200,5 +246,26 @@ async function renderUserConnectForm(instructMsg = "") {
     $('#abort').on("click", async function () {
         await showPosts();
     });
+}
+//#endregion
+
+//#region User Management
+async function renderUsersList() {
+    hidePosts();
+    $('#form').show();
+    $('#abort').show();
+    changeMainTitle('Gestion des utilisateurs');
+    let users = Accounts_API.Get();
+    $("#form").append(`
+        <div id="usersContainer">
+            ${users.forEach(user => {
+        `
+                <div class="userRow">
+                    <div><img class="avatarIcon" src="${user.Avatar}"/></div>
+                    <div>${user.Name}</div>
+                </div>
+            `})}
+        </div>
+    `);
 }
 //#endregion

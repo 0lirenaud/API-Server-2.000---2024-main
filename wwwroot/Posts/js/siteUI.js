@@ -180,6 +180,9 @@ function start_Periodic_Refresh() {
 }
 async function renderPosts(queryString) {
     let endOfData = false;
+    if(queryString === undefined){
+        queryString = "?limit=3&offset=0";
+    }
     queryString += "&sort=date,desc";
     compileCategories();
     if (selectedCategory != "") queryString += "&category=" + selectedCategory;
@@ -262,6 +265,13 @@ function updateDropDownMenu() {
             </div>
             `));
     else {
+        if(sessionUser.isAdmin){
+            DDMenu.append($(`
+                <div class="dropdown-item menuItemLayout" id="usersManagement">
+                    <i class="menuIcon fa-user-gear"></i> Gestion des usagers
+                </div>
+                `));
+        }
         DDMenu.append($(`
             <div class="dropdown-item menuItemLayout" id="userCmd">
                 <img class="userIconMenu" src="${sessionUser.Avatar}"/>

@@ -1,11 +1,20 @@
 
 class Accounts_API {
-    static API_URL() { return "http://localhost:5000/accounts" };
+    static HOST() { return "http://localhost:5000/" };
+    static API_URL() { return this.HOST() + "accounts" };
+    static REGISTER_URL() { return this.API_URL() + "/register" };
+    static MODIFY_URL() { return this.API_URL() + "/modify" };
+    static CONFLICT_URL() { return this.API_URL() + "/conflict" };
+    static VERIFY_URL() { return this.API_URL() + "/verify?" }
+
     static setSessionUser(user) {
         sessionStorage.setItem('user', JSON.stringify(user));
     }
     static setAccessToken(token) {
         sessionStorage.setItem('access_Token', token);
+    }
+    static getAccessToken() {
+        return sessionStorage.getItem('access_Token');
     }
     static removeSessionUser() {
         sessionStorage.removeItem('user');
@@ -14,8 +23,9 @@ class Accounts_API {
         sessionStorage.removeItem('access_Token');
     }
     static headerAccessToken() {
-        return {"authorization": "Bearer " + sessionStorage.getItem('access_Token')}
+        return { "authorization": "Bearer " + sessionStorage.getItem('access_Token') }
     }
+
     static initHttpState() {
         this.currentHttpError = "";
         this.currentStatus = 0;
@@ -29,18 +39,6 @@ class Accounts_API {
         this.currentStatus = xhr.status;
         this.error = true;
     }
-    static async HEAD() {
-        Posts_API.initHttpState();
-        return new Promise(resolve => {
-            $.ajax({
-                url: this.API_URL(),
-                type: 'HEAD',
-                contentType: 'text/plain',
-                complete: data => { resolve(data.getResponseHeader('ETag')); },
-                error: (xhr) => { Posts_API.setHttpErrorState(xhr); resolve(null); }
-            });
-        });
-    }
     static async Get(id = null) {
         Accounts_API.initHttpState();
         return new Promise(resolve => {
@@ -52,7 +50,7 @@ class Accounts_API {
             });
         });
     }
-    static async Login(data) {
+    static async Login(credentials) {
         Accounts_API.initHttpState();
         return new Promise(resolve => {
             $.ajax({
@@ -60,8 +58,18 @@ class Accounts_API {
                 type: "POST",
                 dataType: "json",
                 contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: (data) => { resolve(data); this.setSessionUser(data.User); this.setAccessToken(data.Access_token) },
+                data: JSON.stringify(credentials),
+                success: (data) => {
+                    console.log('la data reçu est: ' + JSON.stringify(data));
+                    if (data.User.VerifyCode === "verified" || credentials.VerifyCode === "verified") {
+                        this.setAccessToken(data.Access_token);
+                        this.setSessionUser(data.User);
+                        resolve(data.User);
+                    } else {
+                        let infos = {Id: data.User.Id, Name: data.User.Name};
+                        resolve(infos);
+                    }
+                },
                 error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
             })
         });
@@ -71,12 +79,12 @@ class Accounts_API {
         return new Promise(resolve => {
             $.ajax({
                 url: this.API_URL() + '/logout',
-                data: {userId: id},
+                data: { userId: id },
                 headers: this.headerAccessToken(),
-                complete: (data) => { 
+                complete: (data) => {
                     this.removeSessionUser();
                     this.removeAccessToken();
-                    resolve(true); 
+                    resolve(true);
                 },
                 error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
             })
@@ -86,13 +94,29 @@ class Accounts_API {
         Accounts_API.initHttpState();
         return new Promise(resolve => {
             $.ajax({
-                url: create ? this.API_URL() : this.API_URL() + "/" + data.Id,
+                url: create ? this.REGISTER_URL() : this.MODIFY_URL(),
                 type: create ? "POST" : "PUT",
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 headers: this.headerAccessToken,
                 success: (data) => { resolve(data); },
                 error: (xhr) => { Posts_API.setHttpErrorState(xhr); resolve(null); }
+            });
+        });
+    }
+    static async Verify(id, code) {
+        Accounts_API.initHttpState();
+        return new Promise(resolve => {
+            $.ajax({
+                url: this.VERIFY_URL() + `id=${id}&code=${code}`,
+                success: data => { resolve(data); },
+                error: (xhr) => {
+                    Accounts_API.setHttpErrorState(xhr);
+                    if (this.currentStatus == 480) resolve(`Le code entré est invalide pour cet utilisateur. Veuillez réessayer.`);
+                    else if (this.currentStatus == 422) resolve(`Utilisateur introuvable.`);
+                    else if (this.currentStatus == 501) resolve(`Une erreur est survenue avec le serveur.`);
+                    else resolve(`Requête introuvable`)
+                }
             });
         });
     }
