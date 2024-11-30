@@ -7,8 +7,11 @@ if (sessionUser != null) {
 }
 let verifyMessage = `
     Votre compte a été crée. Veuillez
-    vérifier vos courriels, afin de récupérer votre code de vérification
+    vérifier vos courriers, afin de récupérer votre code de vérification
     pour votre prochaine connexion. Merci !`
+let changedEmailMessage = `
+    Suite à votre changement de courriel, veuillez récupérer le nouveau code
+    de vérification dans vos courriers pour poursuivre votre connexion. Merci !`
 var userToVerify;
 
 function changeMainTitle(msg = 'Fil de nouvelles', color = null) {
@@ -195,13 +198,17 @@ async function renderUserForm(user = null) {
         let user = getFormData($("#userForm"));
         delete user.ConfirmEmail;
         delete user.ConfirmPassword;
-        if(user.Password === "************")
+        if (user.Password === "************")
             user.Password = '';
         user = await Accounts_API.Save(user, create);
         if (!Posts_API.error) {
-            if (create)
+            if (user === 'unverified'){
+                sessionUser = null;
+                await renderUserConnectForm(changedEmailMessage);
+            }
+            else if (create)
                 await renderUserConnectForm(verifyMessage)
-            else{
+            else {
                 sessionUser = user;
                 await showPosts();
             }
@@ -282,18 +289,18 @@ async function renderUsersList() {
     $('#form').show();
     $('#abort').show();
     changeMainTitle('Gestion des utilisateurs');
-    let users = Accounts_API.Get();
+    let users = await Accounts_API.Get();
     $("#form").append(`
         <div id="usersContainer">
-            ${users.forEach(user => {
-        `
+            ${users.data.map(user => `
                 <div class="userRow">
-                    <div><img class="avatarIcon" src="${user.Avatar}"/></div>
-                    <div>${user.Name}</div>
+                    <div><img class="userIconMenu" src="${user.Avatar}" /></div>
+                    <div class="postUserName">${user.Name}</div>
                 </div>
-            `})}
+            `).join('')}
         </div>
     `);
+    
 }
 //#endregion
 

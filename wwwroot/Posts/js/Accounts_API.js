@@ -11,7 +11,7 @@ class Accounts_API {
         sessionStorage.setItem('user', JSON.stringify(user));
     }
     static getSessionUser(){
-        return sessionStorage.getItem('user');
+        return JSON.parse(sessionStorage.getItem('user'));
     }
     static setAccessToken(token) {
         sessionStorage.setItem('access_Token', token);
@@ -47,7 +47,7 @@ class Accounts_API {
         return new Promise(resolve => {
             $.ajax({
                 url: this.API_URL() + (id != null ? "/index/" + id : ""),
-                headers: this.headerAccessToken,
+                headers: this.headerAccessToken(),
                 complete: data => { resolve({ ETag: data.getResponseHeader('ETag'), data: data.responseJSON }); },
                 error: (xhr) => { Accounts_API.setHttpErrorState(xhr); resolve(null); }
             });
@@ -62,6 +62,7 @@ class Accounts_API {
                 dataType: "json",
                 contentType: 'application/json',
                 data: JSON.stringify(credentials),
+                headers: this.headerAccessToken(),
                 success: (data) => {
                     if (data.User.VerifyCode === "verified" || credentials.VerifyCode === "verified") {
                         this.setAccessToken(data.Access_token);
@@ -100,12 +101,21 @@ class Accounts_API {
                 type: create ? "POST" : "PUT",
                 contentType: 'application/json',
                 data: JSON.stringify(data),
-                headers: this.headerAccessToken,
+                headers: this.headerAccessToken(),
                 success: (data) => { 
-                    if(this.getSessionUser()){
-                        this.setSessionUser(data);
+                    let onlineUser = this.getSessionUser();
+                    if(onlineUser){
+                        if(data.Email != onlineUser.Email){
+                            this.removeSessionUser();
+                            this.removeAccessToken();
+                            resolve('unverified')
+                        } else{
+                            this.setSessionUser(data);
+                            resolve(data);
+                        }
+                    } else{
+                        resolve(data);
                     }
-                    resolve(data);
                 },
                 error: (xhr) => { Posts_API.setHttpErrorState(xhr); resolve(null); }
             });
@@ -117,6 +127,7 @@ class Accounts_API {
             $.ajax({
                 url: this.VERIFY_URL() + `id=${id}&code=${code}`,
                 success: data => { resolve(data); },
+                headers: this.headerAccessToken(),
                 error: (xhr) => {
                     Accounts_API.setHttpErrorState(xhr);
                     if (this.currentStatus == 480) resolve(`Le code entré est invalide pour cet utilisateur. Veuillez réessayer.`);
