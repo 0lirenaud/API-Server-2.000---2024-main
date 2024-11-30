@@ -275,13 +275,6 @@ function updateDropDownMenu() {
             </div>
             `));
     else {
-        if(sessionUser.isAdmin){
-            DDMenu.append($(`
-                <div class="dropdown-item menuItemLayout" id="usersManagement">
-                    <i class="menuIcon fa-user-gear"></i> Gestion des usagers
-                </div>
-                `));
-        }
         DDMenu.append($(`
             <div class="dropdown-item menuItemLayout" id="userCmd">
                 <img class="userIconMenu" src="${sessionUser.Avatar}"/>
@@ -289,6 +282,14 @@ function updateDropDownMenu() {
             </div>
             <div class="dropdown-divider"></div>
         `));
+        if(sessionUser.isAdmin){
+            DDMenu.append($(`
+                <div class="dropdown-item menuItemLayout" id="usersManagement">
+                    <i class="menuIcon fa-solid fa-user-gear mx-2"></i> Gestion des usagers
+                </div>
+                <div class="dropdown-divider"></div>
+                `));
+        }
         DDMenu.append($(`
             <div class="dropdown-item menuItemLayout" id="modifyUser">
                 <i class="menuIcon fa-solid fa-user-pen mx-2"></i> Modifier votre profil
@@ -337,6 +338,9 @@ function updateDropDownMenu() {
     });
     $('#modifyUser').on("click", async function() {
         await renderUserForm(sessionUser);
+    });
+    $('#usersManagement').on("click", async function(){
+        await renderUsersList();
     });
     $('#logoutCmd').on("click", async function() {
         await logout();
