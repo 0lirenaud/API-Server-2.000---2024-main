@@ -12,10 +12,11 @@ export default class AccountsController extends Controller {
     }
     index(id) {
         if (id != '') {
-            if (AccessControl.readGranted(this.HttpContext.authorizations, AccessControl.anonymous()))
+            if (AccessControl.readGranted(this.HttpContext.authorizations, AccessControl.admin()))
                 this.HttpContext.response.JSON(this.repository.get(id));
             else
-6        }
+                this.HttpContext.response.unAuthorized("Unauthorized access");
+        }
         else {
             if (AccessControl.granted(this.HttpContext.authorizations, AccessControl.admin()))
                 this.HttpContext.response.JSON(this.repository.getAll(this.HttpContext.path.params), this.repository.ETag, false, AccessControl.admin());

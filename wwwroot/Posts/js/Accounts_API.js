@@ -106,8 +106,7 @@ class Accounts_API {
                     let onlineUser = this.getSessionUser();
                     if(onlineUser){
                         if(data.Email != onlineUser.Email){
-                            this.removeSessionUser();
-                            this.removeAccessToken();
+                            this.Logout(onlineUser.Id);
                             resolve('unverified')
                         } else{
                             this.setSessionUser(data);
