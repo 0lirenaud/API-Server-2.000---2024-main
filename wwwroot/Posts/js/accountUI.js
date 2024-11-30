@@ -221,29 +221,36 @@ async function renderUserConnectForm(instructMsg = "") {
     changeMainTitle('Connexion');
     $("#form").append(`
         <div id="instructions" style="display:${instructMsg ? "block" : "none"}">${instructMsg}</div>
-        <form class="form" id="userForm">
-            <input 
-                class="form-control"
-                name="Email"
-                id="Email"
-                placeholder="Courriel"
-                RequireMessage="Veuillez entrer un courriel"
-                InvalidMessage="Courriel introuvable"
-                required
-            />
-            <input 
-                class="form-control"
-                name="Password" 
-                id="Password" 
-                placeholder="Mot de passe"
-                type="password"
-                required
-                RequireMessage="Veuillez entrer un mot de passe"
-                InvalidMessage="Mot de passe incorrecte"
-            />
+        <form class="form loginForm" id="userForm">
+            <div>
+                <input 
+                    class="form-control"
+                    name="Email"
+                    id="Email"
+                    placeholder="Courriel"
+                    RequireMessage="Veuillez entrer un courriel"
+                    InvalidMessage="Courriel introuvable"
+                    required
+                />
+                <span class="errorMessage" id="emailError"></span>
+            </div>
+            <div>
+                <input 
+                    class="form-control"
+                    name="Password" 
+                    id="Password" 
+                    placeholder="Mot de passe"
+                    type="password"
+                    required
+                    RequireMessage="Veuillez entrer un mot de passe"
+                    InvalidMessage="Mot de passe incorrecte"
+                />
+                <span class="errorMessage" id="passwordError"></span>
+            </div>
 
             <input type="submit" value="Entrer" id="connect" class="btn btn-primary">
-            <input type="button" value="Nouveau compte" id="createNewAccount" class="btn btn-primary">
+            <hr />
+            <input type="button" value="Nouveau compte" id="createNewAccount" class="btn btn-info">
         </form>
     `);
     initFormValidation(); // important do to after all html injection!
@@ -264,14 +271,25 @@ async function renderUserConnectForm(instructMsg = "") {
                 await renderVerification();
             }
         }
-        else
-            showError("Une erreur est survenue! ", Accounts_API.currentHttpError);
+        else {
+            if(Accounts_API.currentStatus == 482)
+                $('#passwordError').text('Mot de passe incorrect');
+            else if(Accounts_API.currentStatus == 481)
+                $('#emailError').text('Courriel introuvable');
+            else
+                $('#passwordError').text(Accounts_API.error);
+        }
     });
     $('#createNewAccount').on("click", async function () {
         await renderUserForm();
     });
     $('#abort').on("click", async function () {
         await showPosts();
+    });
+    $('input').on('keydown', function() {
+        $('.errorMessage').each(function() {
+            $(this).text('');
+        });
     });
 }
 //#endregion
