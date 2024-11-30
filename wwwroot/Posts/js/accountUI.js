@@ -71,6 +71,7 @@ async function renderVerification(errorMsg = "") {
 async function renderUserForm(user = null) {
     let create = user == null;
     if (create) user = newUser();
+    hidePosts();
     changeMainTitle(create ? 'Inscription' : 'Modification');
     $("#form").show();
     $("#form").empty();
@@ -157,7 +158,7 @@ async function renderUserForm(user = null) {
                 </div>
             </fieldset>
 
-            <div>
+            <div id="optionsContainer">
                 <input
                     type="submit" 
                     value="Enregistrer" 
@@ -169,8 +170,19 @@ async function renderUserForm(user = null) {
                     value="Annuler"
                     id="cancel"
                     class="btn cancelUser"
-                />
-            </div>
+                />`
+        +
+        (sessionUser ? `
+                <hr/>
+                <input
+                    type="button"
+                    value="Supprimer votre compte"
+                    id="delete"
+                    class="btn deleteUser"
+                />` : ``
+        )
+        +
+        `</div>
         </form>
     `);
 
@@ -183,12 +195,16 @@ async function renderUserForm(user = null) {
         let user = getFormData($("#userForm"));
         delete user.ConfirmEmail;
         delete user.ConfirmPassword;
+        if(user.Password === "************")
+            user.Password = '';
         user = await Accounts_API.Save(user, create);
         if (!Posts_API.error) {
             if (create)
                 await renderUserConnectForm(verifyMessage)
-            else
+            else{
+                sessionUser = user;
                 await showPosts();
+            }
         }
         else
             showError("Une erreur est survenue! ", Posts_API.currentHttpError);

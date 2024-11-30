@@ -10,6 +10,9 @@ class Accounts_API {
     static setSessionUser(user) {
         sessionStorage.setItem('user', JSON.stringify(user));
     }
+    static getSessionUser(){
+        return sessionStorage.getItem('user');
+    }
     static setAccessToken(token) {
         sessionStorage.setItem('access_Token', token);
     }
@@ -60,7 +63,6 @@ class Accounts_API {
                 contentType: 'application/json',
                 data: JSON.stringify(credentials),
                 success: (data) => {
-                    console.log('la data reçu est: ' + JSON.stringify(data));
                     if (data.User.VerifyCode === "verified" || credentials.VerifyCode === "verified") {
                         this.setAccessToken(data.Access_token);
                         this.setSessionUser(data.User);
@@ -99,7 +101,12 @@ class Accounts_API {
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 headers: this.headerAccessToken,
-                success: (data) => { resolve(data); },
+                success: (data) => { 
+                    if(this.getSessionUser()){
+                        this.setSessionUser(data);
+                    }
+                    resolve(data);
+                },
                 error: (xhr) => { Posts_API.setHttpErrorState(xhr); resolve(null); }
             });
         });

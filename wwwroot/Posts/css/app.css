@@ -269,14 +269,28 @@ label {
   justify-content: center;
   text-align: center;
 }
-#verifyForm #verifyInput{
+#verifyForm #verifyInput {
   width: 50%;
 }
 #verifyForm input[type="submit"] {
   margin-top: 10px;
   justify-content: center;
 }
-#errorMsg{
+#errorMsg {
   color: rgb(226, 27, 27);
   font-weight: bold;
+}
+#optionsContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 10px;
+  align-items: center;
+}
+#optionsContainer > * {
+  width: 60%;
+}
+.deleteUser {
+  background-color: red;
+  color: white;
 }

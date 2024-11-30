@@ -296,7 +296,7 @@ function updateDropDownMenu() {
             <div class="dropdown-divider"></div>
         `));
         DDMenu.append($(`
-            <div class="dropdown-item menuItemLayout" id="">
+            <div class="dropdown-item menuItemLayout" id="modifyUser">
                 <i class="menuIcon fa-solid fa-user-pen mx-2"></i> Modifier votre profil
             </div>
             <div class="dropdown-item menuItemLayout" id="logoutCmd">
@@ -340,6 +340,9 @@ function updateDropDownMenu() {
     });
     $('#connectCmd').on("click", async function() {
         await renderUserConnectForm();
+    });
+    $('#modifyUser').on("click", async function() {
+        await renderUserForm(sessionUser);
     });
     $('#logoutCmd').on("click", async function() {
         await logout();
