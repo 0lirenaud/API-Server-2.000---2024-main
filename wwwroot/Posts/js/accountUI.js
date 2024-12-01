@@ -1,5 +1,8 @@
 //#region User form rendering
 const TIMEOUT_TIME = 1800
+const USER_READONLY = JSON.stringify({ readAccess: 1, writeAccess: 0 });
+const SUPER_USER = JSON.stringify({ readAccess: 2, writeAccess: 2 });
+const ADMIN = JSON.stringify({ readAccess: 3, writeAccess: 3 });
 let sessionUser = sessionStorage.getItem('user') == 'undefined' ? null : JSON.parse(sessionStorage.getItem('user'));
 if (sessionUser != null) {
     initTimeout(TIMEOUT_TIME, logout);
@@ -202,7 +205,7 @@ async function renderUserForm(user = null) {
             user.Password = '';
         user = await Accounts_API.Save(user, create);
         if (!Posts_API.error) {
-            if (user === 'unverified'){
+            if (user === 'unverified') {
                 sessionUser = null;
                 await renderUserConnectForm(changedEmailMessage);
             }
@@ -279,9 +282,9 @@ async function renderUserConnectForm(instructMsg = "") {
             }
         }
         else {
-            if(Accounts_API.currentStatus == 482)
+            if (Accounts_API.currentStatus == 482)
                 $('#passwordError').text('Mot de passe incorrect');
-            else if(Accounts_API.currentStatus == 481)
+            else if (Accounts_API.currentStatus == 481)
                 $('#emailError').text('Courriel introuvable');
             else
                 $('#passwordError').text(Accounts_API.error);
@@ -293,8 +296,8 @@ async function renderUserConnectForm(instructMsg = "") {
     $('#abort').on("click", async function () {
         await showPosts();
     });
-    $('input').on('keydown', function() {
-        $('.errorMessage').each(function() {
+    $('input').on('keydown', function () {
+        $('.errorMessage').each(function () {
             $(this).text('');
         });
     });
@@ -302,6 +305,33 @@ async function renderUserConnectForm(instructMsg = "") {
 //#endregion
 
 //#region User Management
+function userTypeLogo(auth) {
+    let authString = JSON.stringify(auth);
+    return authString === USER_READONLY
+        ? { title: 'Usager Régulier', logo: '<i class="fa-solid fa-user mx-2"></i>' }
+        : authString === SUPER_USER
+            ? { title: 'Super Usager', logo: '<i class="fa-solid fa-user-pen "></i>' }
+            : { title: 'Administrateur', logo: '<i class="fa-solid fa-user-shield"></i>' };
+}
+function confirmDelete(userId){
+    bootbox.confirm({
+        message: "Voulez-vous vraiment supprimer cet utilisateur ?",
+        buttons: {
+            confirm: {
+                label: 'Oui',
+                className: 'btn-success'
+            },
+            cancel: {
+                label: 'Non',
+                className: 'btn-danger'
+            }
+        },
+        callback: function (result) {
+            if(result)
+                console.log('delete');
+        }
+    });
+}
 async function renderUsersList() {
     hidePosts();
     $('#form').show();
@@ -310,15 +340,28 @@ async function renderUsersList() {
     let users = await Accounts_API.Get();
     $("#form").append(`
         <div id="usersContainer">
-            ${users.data.map(user => `
-                <div class="userRow">
-                    <div><img class="userIconMenu" src="${user.Avatar}" /></div>
-                    <div class="postUserName">${user.Name}</div>
-                </div>
-            `).join('')}
+            ${users.data.map(user => {
+        const { title, logo } = userTypeLogo(user.Authorizations);
+        const { desc, state } = user.isBlocked ? 
+        { desc: 'Débloquer ', state: '<i class="fa fa-ban" style="color: #ff0000;"></i>' } : 
+        { desc: 'Bloquer ', state: '<i class="fa-solid fa-check" style="color: #00ff00;"></i>' };
+        return `<div class="userRow">
+                    <div class="userInfo">
+                        <div><img class="userIconMenu" src="${user.Avatar}" /></div>
+                        <div class="postUserName">${user.Name}</div>
+                    </div>
+                    <div class="options" data-id="${user.Id}">
+                        <div title="${title}" class="promoteUser">${logo}</div>
+                        <div title="${desc + user.Name}" class="blockUser">${state}</div>
+                        <div title="${'Supprimer ' + user.Name}"class="deleteAccount"><i class="fa-solid fa-circle-xmark"></i></div>
+                    </div>
+                </div>`}).join('')}
         </div>
     `);
-    
+    $(".deleteAccount").on('click',function(){
+        let userId = $(this).parent().data('id');
+        confirmDelete(userId);
+    });
 }
 //#endregion
 

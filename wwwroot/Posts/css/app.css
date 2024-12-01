@@ -294,3 +294,40 @@ label {
   background-color: red;
   color: white;
 }
+.userRow{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  background-color: rgb(239, 239, 239);
+  padding: 15px;
+  margin-bottom: 10px;
+  align-items: center;
+  border-radius: 5px;
+
+}
+.userRow .postUserName{
+  font-weight: bold;
+  font-size: 1.1em;
+}
+.options{
+  display: flex;
+  gap: 30px;
+  font-size: 2em;
+}
+.options > * {
+  cursor: pointer;
+}
+.options > *:hover{
+  opacity: 0.5;
+}
+.userInfo{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.deleteAccount {
+  color: red;
+}
+.promoteUser{
+  color: rgb(0, 87, 204);
+}
