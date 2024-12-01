@@ -78,4 +78,17 @@ class Posts_API {
             });
         });
     }
+    static async ToggleLike(idPost, idUser) {
+        Posts_API.initHttpState();
+        return new Promise(resolve => {
+            $.ajax({
+                url: 'http://localhost:5000/posts/togglelike',
+                type: "PUT",
+                data: JSON.stringify({'postId': idPost, 'userId': idUser}),
+                contentType: 'application/json',
+                success: (data) => { resolve(data); },
+                error: (xhr) => { Posts_API.setHttpErrorState(xhr); resolve(null); }
+            });
+        });
+    }
 }
