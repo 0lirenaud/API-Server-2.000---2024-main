@@ -225,6 +225,10 @@ async function renderUserForm(user = null) {
     $('#cancel').on("click", async function () {
         await showPosts();
     });
+    if (sessionUser)
+        $('#delete').on('click', function () {
+            confirmDelete(sessionUser.Id)
+        });
 }
 async function renderUserConnectForm(instructMsg = "") {
     hidePosts();
@@ -311,6 +315,18 @@ async function renderUserConnectForm(instructMsg = "") {
 //#endregion
 
 //#region User Management
+function userListeners() {
+    $(".deleteAccount").on('click', function () {
+        let id = $(this).parent().data('id');
+        confirmDelete(id, true);
+    });
+    $('.blockUser').on('click', async function () {
+        let $this = $(this);
+        let id = $this.parent().data('id');
+        let title = $this.attr('title');
+        await toggleBlocked($this, title, id);
+    });
+}
 function userTypeLogo(u) {
     return u.isAdmin ? ADMIN_HTML : u.isSuperUser ? SUPER_USER_HTML : USER_READONLY_HTML;
 }
@@ -324,9 +340,9 @@ function userRegularOptions(u) {
     <div title="${'Supprimer ' + u.Name}"class="deleteAccount"><i class="fa-solid fa-circle-xmark"></i></div>
     ` : ``
 }
-function confirmDelete(id) {
+function confirmDelete(id, adminRequest = false) {
     bootbox.confirm({
-        message: "Voulez-vous vraiment supprimer cet utilisateur ?",
+        message: `Voulez-vous vraiment supprimer ${adminRequest ? "cet utilisateur" : "votre compte"}?`,
         buttons: {
             confirm: {
                 label: 'Oui',
@@ -339,14 +355,16 @@ function confirmDelete(id) {
         },
         callback: async function (result) {
             if (result) {
-                await deleteUser(id);
-                await renderUsersList();
+                if (await deleteUser(id))
+                    if (adminRequest) { await renderUsersList(); } else { await renderUserForm(); }
+                else changeMainTitle(Accounts_API.error); // temporary
             }
         }
     });
 }
 async function deleteUser(id) {
-    //TODO
+    logout();
+    return await Accounts_API.Delete(id);
 }
 async function toggleType($this, title, id) {
     let u = await Accounts_API.Promote(id);
@@ -354,10 +372,12 @@ async function toggleType($this, title, id) {
     index = (index == TYPES.length - 1) ? 0 : index + 1;
     $this.attr('title', TYPES[index].title);
     $this.html(TYPES[index].logo);
-    if (TYPES[index].title == USER_READONLY_HTML.title)
+    if (TYPES[index].title == USER_READONLY_HTML.title) {
         $this.after(userRegularOptions(u))
-    else
-        $this.siblings(".blockUser, .deleteAccount").remove();
+        userListeners()
+    }
+    else if ($this.siblings().length > 0)
+        $this.siblings().remove();
 }
 async function toggleBlocked($this, title, id) {
     let u = await Accounts_API.Block(id);
@@ -369,17 +389,12 @@ async function renderUsersList() {
     $('#hiddenIcon2').show();
     $('#form').show();
     $('#abort').show();
-    changeMainTitle('Gestion des utilisateurs');
+    changeMainTitle('Gestion des usagers');
     let users = (await Accounts_API.Get())
         .data
-        .sort((a, b) => {
-            if (a.isAdmin && b.isSuperUser) return 1;
-            if (a.isSuperUser && !(b.isAdmin || b.isSuperUser)) return 1;
-            if (b.isAdmin && a.isSuperUser) return -1;
-            if (b.isSuperUser && !(a.isAdmin || a.isSuperUser)) return -1;
-            return a.Name > b.Name ? 1 : a.Name < b.Name ? -1 : 0;
-        }).filter(u => u.Id !== sessionUser.Id);
-        
+        .sort((a, b) => { return a.Name.localeCompare(b.Name); })
+        .filter(u => u.Id !== sessionUser.Id);
+
     $("#form").append(`
         <div id="usersContainer">
             ${users.map(user => {
@@ -399,22 +414,13 @@ async function renderUsersList() {
                 </div>`}).join('')}
         </div>
     `);
-    $(".deleteAccount").on('click', function () {
-        let id = $(this).parent().data('id');
-        confirmDelete(id);
-    });
     $(".promoteUser").on('click', async function () {
         let $this = $(this);
         let id = $this.parent().data('id');
         let title = $this.attr('title');
         await toggleType($this, title, id);
     });
-    $('.blockUser').on('click', async function () {
-        let $this = $(this);
-        let id = $this.parent().data('id');
-        let title = $this.attr('title');
-        await toggleBlocked($this, title, id);
-    });
+    userListeners();
 }
 //#endregion
 
