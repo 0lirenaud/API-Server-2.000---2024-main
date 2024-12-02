@@ -37,6 +37,26 @@ async function Init_UI() {
         toogleShowKeywords();
         showPosts();
     });
+    $(document).on("click", "#toggleLike", async function () {
+        let postId = $(this).attr('postId');
+        let post = await Posts_API.ToggleLike(postId, sessionUser.Id);
+        if(!Posts_API.error){
+            if($(this).hasClass('fa-regular')) {
+                $(this).removeClass('fa-regular');
+                $(this).addClass('fa-solid');
+            }
+            else {
+                $(this).removeClass('fa-solid');
+                $(this).addClass('fa-regular');
+            }
+            let likeNames = "";
+            post.Likes.forEach((element) => {
+                likeNames += element.UserName + "\n";
+            });
+            $(this).next().text(post.Likes.length);
+            $(this).prop('title', likeNames);
+        }
+    });
 
     installKeywordsOnkeyupEvent();
     await showPosts();
@@ -219,17 +239,35 @@ async function renderPosts(queryString) {
 function renderPost(post, loggedUser) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
     let crudIcon = "";
-    if (sessionUser != null)
-        crudIcon = sessionUser.Id == post.OwnerId || sessionUser.isAdmin ? 
+    let likeNames = "";
+    let userLiked = false;
+    post.Likes.forEach((element) => {
+        likeNames += element.UserName + "\n";
+        if(sessionUser != null && sessionUser.Id == element.UserId)
+            userLiked = true;
+    });
+    let likeIcon = 
+            `<span class="cmdIconSmall ${!userLiked ? "fa-regular" : "fa-solid"} fa-thumbs-up" id="${sessionUser != null ? "toggleLike" : ""}" postId="${post.Id}" 
+            title="${likeNames}"></span><span class="postLikes">${post.Likes.length}</span>`
+    if (sessionUser != null) {
+        crudIcon = sessionUser.Id == post.OwnerId ? 
             `
             <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
+            ` : "<span>&nbsp</span>";
+        crudIcon += sessionUser.Id == post.OwnerId || sessionUser.isAdmin ?
+            `
             <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
-            ` : "";
+            ` : `<span>&nbsp</span>`;
+    }
+    else
+        crudIcon = `<span>&nbsp</span><span>&nbsp</span>`;
+        
     return $(`
         <div class="post" id="${post.Id}">
             <div class="postHeader">
                 ${post.Category}
                 ${crudIcon}
+                ${likeIcon}
             </div>
             <div class="postTitle"> ${post.Title} </div>
             <img class="postImage" src='${post.Image}'/>
