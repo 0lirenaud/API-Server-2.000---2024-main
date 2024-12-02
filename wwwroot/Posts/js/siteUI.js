@@ -36,8 +36,8 @@ async function Init_UI() {
     $(document).on("click", "#toggleLike", async function () {
         let postId = $(this).attr('postId');
         let post = await Posts_API.ToggleLike(postId, sessionUser.Id);
-        if(!Posts_API.error){
-            if($(this).hasClass('fa-regular')) {
+        if (!Posts_API.error) {
+            if ($(this).hasClass('fa-regular')) {
                 $(this).removeClass('fa-regular');
                 $(this).addClass('fa-solid');
             }
@@ -109,8 +109,8 @@ function toogleShowKeywords() {
 
 //#region Views management
 function intialView() {
-    if(sessionUser != null && sessionUser != 'undefined')
-        if(sessionUser.isSuperUser || sessionUser.isAdmin) {
+    if (sessionUser != null && sessionUser != 'undefined')
+        if (sessionUser.isSuperUser || sessionUser.isAdmin) {
             $("#createPost").show();
             $('#hiddenIcon').hide();
         }
@@ -205,7 +205,7 @@ function start_Periodic_Refresh() {
 }
 async function renderPosts(queryString) {
     let endOfData = false;
-    if(queryString === undefined){
+    if (queryString === undefined) {
         queryString = "?limit=3&offset=0";
     }
     queryString += "&sort=date,desc";
@@ -222,8 +222,8 @@ async function renderPosts(queryString) {
         currentETag = response.ETag;
         let Posts = response.data;
         if (Posts.length > 0) {
-            Posts.forEach(Post =>  {
-                postsPanel.itemsPanel.append( renderPost(Post));
+            Posts.forEach(Post => {
+                postsPanel.itemsPanel.append(renderPost(Post));
             });
         } else
             endOfData = true;
@@ -240,17 +240,20 @@ function renderPost(post, loggedUser) {
     let date = convertToFrenchDate(UTC_To_Local(post.Date));
     let crudIcon = "";
     let likeNames = "";
+    let likeIcon = "";
     let userLiked = false;
     post.Likes.forEach((element) => {
         likeNames += element.UserName + "\n";
-        if(sessionUser != null && sessionUser.Id == element.UserId)
+        if (sessionUser != null && sessionUser.Id == element.UserId)
             userLiked = true;
     });
-    let likeIcon = 
-            `<span class="cmdIconSmall ${!userLiked ? "fa-regular" : "fa-solid"} fa-thumbs-up" id="${sessionUser != null ? "toggleLike" : ""}" postId="${post.Id}" 
-            title="${likeNames}"></span><span class="postLikes">${post.Likes.length}</span>`
+
     if (sessionUser != null) {
-        crudIcon = sessionUser.Id == post.OwnerId || sessionUser.isSuperUser ? 
+        likeIcon =
+            `<span class="cmdIconSmall ${!userLiked ? "fa-regular" : "fa-solid"} fa-thumbs-up" id="${sessionUser != null ? "toggleLike" : ""}" postId="${post.Id}" 
+        title="${likeNames}"></span><span class="postLikes">${post.Likes.length}</span>`
+
+        crudIcon = sessionUser.Id == post.OwnerId || sessionUser.isSuperUser ?
             `
             <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
             ` : "<span>&nbsp</span>";
@@ -261,7 +264,7 @@ function renderPost(post, loggedUser) {
     }
     else
         crudIcon = `<span>&nbsp</span><span>&nbsp</span>`;
-        
+
     return $(`
         <div class="post" id="${post.Id}">
             <div class="postHeader">
@@ -306,7 +309,7 @@ function updateDropDownMenu() {
     let DDMenu = $("#DDMenu");
     let selectClass = selectedCategory === "" ? "fa-check" : "fa-fw";
     DDMenu.empty();
-    if(sessionUser == null)
+    if (sessionUser == null)
         DDMenu.append($(`
             <div class="dropdown-item menuItemLayout" id="connectCmd">
                 <i class="menuIcon fa mx-2 fa-sign-in"></i> Connexion
@@ -320,7 +323,7 @@ function updateDropDownMenu() {
             </div>
             <div class="dropdown-divider"></div>
         `));
-        if(sessionUser.isAdmin){
+        if (sessionUser.isAdmin) {
             DDMenu.append($(`
                 <div class="dropdown-item menuItemLayout" id="usersManagement">
                     <i class="menuIcon fa-solid fa-user-gear mx-2"></i> Gestion des usagers
@@ -371,16 +374,16 @@ function updateDropDownMenu() {
         await showPosts(true);
         updateDropDownMenu();
     });
-    $('#connectCmd').on("click", async function() {
+    $('#connectCmd').on("click", async function () {
         await renderUserConnectForm();
     });
-    $('#modifyUser').on("click", async function() {
+    $('#modifyUser').on("click", async function () {
         await renderUserForm(sessionUser);
     });
-    $('#usersManagement').on("click", async function(){
+    $('#usersManagement').on("click", async function () {
         await renderUsersList();
     });
-    $('#logoutCmd').on("click", async function() {
+    $('#logoutCmd').on("click", async function () {
         await logout();
     });
 }
