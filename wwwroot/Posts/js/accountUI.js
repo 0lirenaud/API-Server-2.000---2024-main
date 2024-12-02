@@ -388,6 +388,7 @@ async function renderUsersList() {
     hidePosts();
     $('#hiddenIcon2').show();
     $('#form').show();
+    $('#form').empty();
     $('#abort').show();
     changeMainTitle('Gestion des usagers');
     let users = (await Accounts_API.Get())

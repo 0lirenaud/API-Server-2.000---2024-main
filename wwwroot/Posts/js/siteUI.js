@@ -110,7 +110,7 @@ function toogleShowKeywords() {
 //#region Views management
 function intialView() {
     if (sessionUser != null && sessionUser != 'undefined')
-        if (sessionUser.isSuperUser || sessionUser.isAdmin) {
+        if (sessionUser.isSuperUser) {
             $("#createPost").show();
             $('#hiddenIcon').hide();
         }
@@ -249,9 +249,11 @@ function renderPost(post, loggedUser) {
     });
 
     if (sessionUser != null) {
-        likeIcon =
-            `<span class="cmdIconSmall ${!userLiked ? "fa-regular" : "fa-solid"} fa-thumbs-up" id="${sessionUser != null ? "toggleLike" : ""}" postId="${post.Id}" 
+        if (!sessionUser.isAdmin) {
+            likeIcon =
+                `<span class="cmdIconSmall ${!userLiked ? "fa-regular" : "fa-solid"} fa-thumbs-up" id="${sessionUser != null ? "toggleLike" : ""}" postId="${post.Id}" 
         title="${likeNames}"></span><span class="postLikes">${post.Likes.length}</span>`
+        }
 
         crudIcon = sessionUser.Id == post.OwnerId || sessionUser.isSuperUser ?
             `

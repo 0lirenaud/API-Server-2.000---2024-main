@@ -213,7 +213,7 @@ export default class AccountsController extends Controller {
     }
 
     // GET:account/remove/id
-    remove(id) { // warning! this is not an API endpoint 
+    remove(id) {
         let userId = this.HttpContext.path.params.userToRemove;
         let resquestedByAdmin = this.HttpContext.path.params.requestByAdmin === 'true';
         let permissionGranted = false;
