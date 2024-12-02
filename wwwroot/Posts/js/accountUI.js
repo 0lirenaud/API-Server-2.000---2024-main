@@ -1,6 +1,4 @@
 const TIMEOUT_TIME = 1800
-const USER_READONLY_AUTH = JSON.stringify({ readAccess: 1, writeAccess: 0 });
-const SUPER_USER_AUTH = JSON.stringify({ readAccess: 2, writeAccess: 2 });
 const USER_READONLY_HTML = { title: 'Usager Régulier', logo: '<i class="fa-solid fa-user mx-2"></i>' };
 const SUPER_USER_HTML = { title: 'Super Usager', logo: '<i class="fa-solid fa-user-pen"></i>' };
 const ADMIN_HTML = { title: 'Administrateur', logo: '<i class="fa-solid fa-user-shield"></i>' };
