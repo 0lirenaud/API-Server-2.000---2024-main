@@ -16,6 +16,9 @@ export default class AccessControl {
     static admin() {
         return { readAccess: 3, writeAccess: 3 };
     }
+    static blocked() {
+        return { readAccess: -1, writeAccess: -1 };
+    }
     static granted(authorizations, requiredAccess) {
         if (requiredAccess) {
             if (requiredAccess.readAccess == 0 && requiredAccess.writeAccess == 0) return true;

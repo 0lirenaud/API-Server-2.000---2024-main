@@ -136,12 +136,15 @@ export default class AccountsController extends Controller {
     }
     promote(user) {
         if (this.repository != null) {
-            let foundUser = this.repository.findByField("Id", user.Id);
-            foundUser.Authorizations.readAccess++;
-            if (foundUser.Authorizations.readAccess > 3) foundUser.Authorizations.readAccess = 1;
-            foundUser.Authorizations.writeAccess++;
-            if (foundUser.Authorizations.writeAccess > 3) foundUser.Authorizations.writeAccess = 1;
-            let updatedUser = this.repository.update(user.Id, foundUser);
+            let storedUser = this.repository.findByField("Id", user.Id);
+            let userExtraData = this.repository.get(user.Id);
+
+            if (userExtraData.isAdmin) storedUser.Authorizations = AccessControl.userReadOnly();
+            else if (userExtraData.isSuperUser) storedUser.Authorizations = AccessControl.admin();
+            else storedUser.Authorizations = AccessControl.superUser();
+
+            this.repository.update(user.Id, storedUser);
+            let updatedUser = this.repository.get(user.Id); // must get record user.id with binded data
             if (this.repository.model.state.isValid)
                 this.HttpContext.response.JSON(updatedUser);
             else
@@ -151,10 +154,14 @@ export default class AccountsController extends Controller {
     }
     block(user) {
         if (this.repository != null) {
-            let foundUser = this.repository.findByField("Id", user.Id);
-            foundUser.Authorizations.readAccess = foundUser.Authorizations.readAccess == 1 ? -1 : 1;
-            foundUser.Authorizations.writeAccess = foundUser.Authorizations.writeAccess == 1 ? -1 : 1;
-            let updatedUser = this.repository.update(user.Id, foundUser);
+            let storedUser = this.repository.findByField("Id", user.Id);
+            let userExtraData = this.repository.get(user.Id);
+
+            if (userExtraData.isBlocked) storedUser.Authorizations = AccessControl.userReadOnly();
+            else storedUser.Authorizations = AccessControl.blocked();
+            
+            this.repository.update(user.Id, storedUser);
+            let updatedUser = this.repository.get(user.Id); // must get record user.id with binded data
             if (this.repository.model.state.isValid)
                 this.HttpContext.response.JSON(updatedUser);
             else

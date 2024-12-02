@@ -1,9 +1,15 @@
-//#region User form rendering
 const TIMEOUT_TIME = 1800
-const USER_READONLY = JSON.stringify({ readAccess: 1, writeAccess: 0 });
-const SUPER_USER = JSON.stringify({ readAccess: 2, writeAccess: 2 });
-const ADMIN = JSON.stringify({ readAccess: 3, writeAccess: 3 });
+const USER_READONLY_AUTH = JSON.stringify({ readAccess: 1, writeAccess: 0 });
+const SUPER_USER_AUTH = JSON.stringify({ readAccess: 2, writeAccess: 2 });
+const USER_READONLY_HTML = { title: 'Usager Régulier', logo: '<i class="fa-solid fa-user mx-2"></i>' };
+const SUPER_USER_HTML = { title: 'Super Usager', logo: '<i class="fa-solid fa-user-pen"></i>' };
+const ADMIN_HTML = { title: 'Administrateur', logo: '<i class="fa-solid fa-user-shield"></i>' };
+const USER_BLOCKED_HTML = { desc: 'Bloquer ', state: '<i class="fa-solid fa-check" style="color: #00ff00;"></i>' };
+const USER_UNBLOCKED_HTML = { desc: 'Débloquer ', state: '<i class="fa fa-ban" style="color: #ff0000;"></i>' };
+const TYPES = [USER_READONLY_HTML, SUPER_USER_HTML, ADMIN_HTML];
 let sessionUser = sessionStorage.getItem('user') == 'undefined' ? null : JSON.parse(sessionStorage.getItem('user'));
+//#region User form rendering
+
 if (sessionUser != null) {
     initTimeout(TIMEOUT_TIME, logout);
     timeout();
@@ -305,15 +311,20 @@ async function renderUserConnectForm(instructMsg = "") {
 //#endregion
 
 //#region User Management
-function userTypeLogo(auth) {
-    let authString = JSON.stringify(auth);
-    return authString === USER_READONLY
-        ? { title: 'Usager Régulier', logo: '<i class="fa-solid fa-user mx-2"></i>' }
-        : authString === SUPER_USER
-            ? { title: 'Super Usager', logo: '<i class="fa-solid fa-user-pen "></i>' }
-            : { title: 'Administrateur', logo: '<i class="fa-solid fa-user-shield"></i>' };
+function userTypeLogo(u) {
+    return u.isAdmin ? ADMIN_HTML : u.isSuperUser ? SUPER_USER_HTML : USER_READONLY_HTML;
 }
-function confirmDelete(userId){
+function userBlocked(u) {
+    return u.isBlocked ? USER_UNBLOCKED_HTML : USER_BLOCKED_HTML;
+}
+function userRegularOptions(u) {
+    const { desc, state } = userBlocked(u);
+    return !(u.isAdmin || u.isSuperUser) ? `
+    <div title="${desc + u.Name}" class="blockUser">${state}</div>
+    <div title="${'Supprimer ' + u.Name}"class="deleteAccount"><i class="fa-solid fa-circle-xmark"></i></div>
+    ` : ``
+}
+function confirmDelete(id) {
     bootbox.confirm({
         message: "Voulez-vous vraiment supprimer cet utilisateur ?",
         buttons: {
@@ -326,41 +337,81 @@ function confirmDelete(userId){
                 className: 'btn-danger'
             }
         },
-        callback: function (result) {
-            if(result)
-                console.log('delete');
+        callback: async function (result) {
+            if (result) {
+                await deleteUser(id);
+                await renderUsersList();
+            }
         }
     });
+}
+async function deleteUser(id) {
+    //TODO
+}
+async function toggleType($this, title, id) {
+    let u = await Accounts_API.Promote(id);
+    let index = TYPES.findIndex(type => type.title === title);
+    index = (index == TYPES.length - 1) ? 0 : index + 1;
+    $this.attr('title', TYPES[index].title);
+    $this.html(TYPES[index].logo);
+    if (TYPES[index].title == USER_READONLY_HTML.title)
+        $this.after(userRegularOptions(u))
+    else
+        $this.siblings(".blockUser, .deleteAccount").remove();
+}
+async function toggleBlocked($this, title, id) {
+    let u = await Accounts_API.Block(id);
+    $this.attr('title', title.includes(USER_BLOCKED_HTML.desc) ? USER_UNBLOCKED_HTML.desc : USER_BLOCKED_HTML.desc);
+    $this.html(title.includes(USER_BLOCKED_HTML.desc) ? USER_UNBLOCKED_HTML.state : USER_BLOCKED_HTML.state);
 }
 async function renderUsersList() {
     hidePosts();
     $('#form').show();
     $('#abort').show();
     changeMainTitle('Gestion des utilisateurs');
-    let users = await Accounts_API.Get();
+    let users = (await Accounts_API.Get())
+        .data
+        .sort((a, b) => {
+            if (a.isAdmin && b.isSuperUser) return 1;
+            if (a.isSuperUser && !(b.isAdmin || b.isSuperUser)) return 1;
+            if (b.isAdmin && a.isSuperUser) return -1;
+            if (b.isSuperUser && !(a.isAdmin || a.isSuperUser)) return -1;
+            return a.Name > b.Name ? 1 : a.Name < b.Name ? -1 : 0;
+        }).filter(u => u.Id !== sessionUser.Id);
     $("#form").append(`
         <div id="usersContainer">
-            ${users.data.map(user => {
-        const { title, logo } = userTypeLogo(user.Authorizations);
-        const { desc, state } = user.isBlocked ? 
-        { desc: 'Débloquer ', state: '<i class="fa fa-ban" style="color: #ff0000;"></i>' } : 
-        { desc: 'Bloquer ', state: '<i class="fa-solid fa-check" style="color: #00ff00;"></i>' };
+            ${users.map(user => {
+        const { title, logo } = userTypeLogo(user);
+        const regularUserChoices = userRegularOptions(user);
         return `<div class="userRow">
                     <div class="userInfo">
                         <div><img class="userIconMenu" src="${user.Avatar}" /></div>
                         <div class="postUserName">${user.Name}</div>
                     </div>
                     <div class="options" data-id="${user.Id}">
-                        <div title="${title}" class="promoteUser">${logo}</div>
-                        <div title="${desc + user.Name}" class="blockUser">${state}</div>
-                        <div title="${'Supprimer ' + user.Name}"class="deleteAccount"><i class="fa-solid fa-circle-xmark"></i></div>
-                    </div>
+                        <div title="${title}" class="promoteUser">${logo}</div>`
+            +
+            regularUserChoices
+            +
+            `</div>
                 </div>`}).join('')}
         </div>
     `);
-    $(".deleteAccount").on('click',function(){
-        let userId = $(this).parent().data('id');
-        confirmDelete(userId);
+    $(".deleteAccount").on('click', function () {
+        let id = $(this).parent().data('id');
+        confirmDelete(id);
+    });
+    $(".promoteUser").on('click', async function () {
+        let $this = $(this);
+        let id = $this.parent().data('id');
+        let title = $this.attr('title');
+        await toggleType($this, title, id);
+    });
+    $('.blockUser').on('click', async function () {
+        let $this = $(this);
+        let id = $this.parent().data('id');
+        let title = $this.attr('title');
+        await toggleBlocked($this, title, id);
     });
 }
 //#endregion

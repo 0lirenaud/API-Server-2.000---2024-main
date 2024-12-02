@@ -5,12 +5,15 @@ class Accounts_API {
     static REGISTER_URL() { return this.API_URL() + "/register" };
     static MODIFY_URL() { return this.API_URL() + "/modify" };
     static CONFLICT_URL() { return this.API_URL() + "/conflict" };
-    static VERIFY_URL() { return this.API_URL() + "/verify?" }
+    static VERIFY_URL() { return this.API_URL() + "/verify?" };
+    static PROMOTE_URL() { return this.API_URL() + "/promote" };
+    static BLOCK_URL() { return this.API_URL() + "/block" };
+    static DELETE_URL() { return this.API_URL() + "delete" };
 
     static setSessionUser(user) {
         sessionStorage.setItem('user', JSON.stringify(user));
     }
-    static getSessionUser(){
+    static getSessionUser() {
         return JSON.parse(sessionStorage.getItem('user'));
     }
     static setAccessToken(token) {
@@ -69,7 +72,7 @@ class Accounts_API {
                         this.setSessionUser(data.User);
                         resolve(data.User);
                     } else {
-                        let infos = {Id: data.User.Id, Name: data.User.Name};
+                        let infos = { Id: data.User.Id, Name: data.User.Name };
                         resolve(infos);
                     }
                 },
@@ -102,17 +105,17 @@ class Accounts_API {
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 headers: this.headerAccessToken(),
-                success: (data) => { 
+                success: (data) => {
                     let onlineUser = this.getSessionUser();
-                    if(onlineUser){
-                        if(data.Email != onlineUser.Email){
+                    if (onlineUser) {
+                        if (data.Email != onlineUser.Email) {
                             this.Logout(onlineUser.Id);
                             resolve('unverified')
-                        } else{
+                        } else {
                             this.setSessionUser(data);
                             resolve(data);
                         }
-                    } else{
+                    } else {
                         resolve(data);
                     }
                 },
@@ -133,6 +136,44 @@ class Accounts_API {
                     else if (this.currentStatus == 422) resolve(`Utilisateur introuvable.`);
                     else if (this.currentStatus == 501) resolve(`Une erreur est survenue avec le serveur.`);
                     else resolve(`Requête introuvable`)
+                }
+            });
+        });
+    }
+    static async Promote(id) {
+        Accounts_API.initHttpState();
+        let user = (await this.Get(id)).data;
+        return new Promise(resolve => {
+            $.ajax({
+                url: this.PROMOTE_URL(),
+                type: "POST",
+                dataType: "json",
+                contentType: 'application/json',
+                data: JSON.stringify(user),
+                headers: this.headerAccessToken(),
+                success: data => { resolve(data); },
+                error: (xhr) => {
+                    Accounts_API.setHttpErrorState(xhr);
+                    resolve(null);
+                }
+            });
+        });
+    }
+    static async Block(id) {
+        Accounts_API.initHttpState();
+        let user = (await this.Get(id)).data;
+        return new Promise(resolve => {
+            $.ajax({
+                url: this.BLOCK_URL(),
+                type: "POST",
+                dataType: "json",
+                contentType: 'application/json',
+                data: JSON.stringify(user),
+                headers: this.headerAccessToken(),
+                success: data => { resolve(data); },
+                error: (xhr) => {
+                    Accounts_API.setHttpErrorState(xhr);
+                    resolve(null);
                 }
             });
         });
