@@ -34,7 +34,24 @@ export default class Post extends Model {
         instance.Likes.forEach((element, index) => {
             instance.Likes[index].UserName = usersRepository.get(element.UserId).Name;
         });
-        
+
         return instance;
+    }
+    static removeLikes(userId) {
+        let postRepository = new Repository(new Post())
+        let posts = postRepository.getAll();
+
+        posts.forEach(post => {
+            let likes = post.Likes;
+            if (likes.length > 0) {
+                let like = likes.find(u => u.UserId == userId);
+                if (like) {
+                    let idx = likes.indexOf(like);
+                    likes.splice(idx, 1);
+                    post.Likes = likes;
+                    postRepository.update(post.Id, post);
+                }
+            }
+        });
     }
 }

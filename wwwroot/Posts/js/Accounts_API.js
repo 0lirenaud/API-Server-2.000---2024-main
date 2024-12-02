@@ -8,7 +8,7 @@ class Accounts_API {
     static VERIFY_URL() { return this.API_URL() + "/verify?" };
     static PROMOTE_URL() { return this.API_URL() + "/promote" };
     static BLOCK_URL() { return this.API_URL() + "/block" };
-    static DELETE_URL() { return this.API_URL() + "delete" };
+    static DELETE_URL() { return this.API_URL() + "/remove/" };
 
     static setSessionUser(user) {
         sessionStorage.setItem('user', JSON.stringify(user));
@@ -175,6 +175,18 @@ class Accounts_API {
                     Accounts_API.setHttpErrorState(xhr);
                     resolve(null);
                 }
+            });
+        });
+    }
+    static async Delete(id, adminRequest) {
+        Accounts_API.initHttpState();
+        return new Promise(resolve => {
+            $.ajax({
+                url: this.DELETE_URL() + id,
+                data: { userToRemove: id, requestByAdmin: adminRequest },
+                headers: this.headerAccessToken(),
+                success: (data) => {resolve(data)},
+                error: (xhr) => { Posts_API.setHttpErrorState(xhr); resolve('Opération annulée'); }
             });
         });
     }

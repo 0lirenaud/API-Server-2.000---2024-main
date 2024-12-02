@@ -355,16 +355,16 @@ function confirmDelete(id, adminRequest = false) {
         },
         callback: async function (result) {
             if (result) {
-                if (await deleteUser(id))
-                    if (adminRequest) { await renderUsersList(); } else { await renderUserForm(); }
-                else changeMainTitle(Accounts_API.error); // temporary
+                if (await deleteUser(id, adminRequest))
+                    if (adminRequest) { await renderUsersList(); } else { await logout(); }
+                else changeMainTitle(Accounts_API.error, 'red'); // Debugging purposes
             }
         }
     });
 }
-async function deleteUser(id) {
-    logout();
-    return await Accounts_API.Delete(id);
+async function deleteUser(id, adminRequest) {
+    let deleted = await Accounts_API.Delete(id, adminRequest);
+    return typeof deleted != 'string';
 }
 async function toggleType($this, title, id) {
     let u = await Accounts_API.Promote(id);

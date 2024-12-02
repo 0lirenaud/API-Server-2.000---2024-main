@@ -1,10 +1,12 @@
 import UserModel from '../models/user.js';
+import PostModel from '../models/post.js';
 import Repository from '../models/repository.js';
 import TokenManager from '../tokensManager.js';
 import * as utilities from "../utilities.js";
 import Gmail from "../gmail.js";
 import Controller from './Controller.js';
 import AccessControl from '../accessControl.js';
+import Post from '../models/post.js';
 
 export default class AccountsController extends Controller {
     constructor(HttpContext) {
@@ -30,7 +32,7 @@ export default class AccountsController extends Controller {
             if (this.repository != null) {
                 let user = this.repository.findByField("Email", loginInfo.Email);
                 if (user != null) {
-                    if(user.Authorizations.readAccess == -1)
+                    if (user.Authorizations.readAccess == -1)
                         this.HttpContext.response.unAuthorized('Votre compte a été bloqué par un administrateur.');
                     else if (user.Password == loginInfo.Password) {
                         user = this.repository.get(user.Id);
@@ -161,7 +163,7 @@ export default class AccountsController extends Controller {
 
             if (userExtraData.isBlocked) storedUser.Authorizations = AccessControl.userReadOnly();
             else storedUser.Authorizations = AccessControl.blocked();
-            
+
             this.repository.update(user.Id, storedUser);
             let updatedUser = this.repository.get(user.Id); // must get record user.id with binded data
             if (this.repository.model.state.isValid)
@@ -212,9 +214,34 @@ export default class AccountsController extends Controller {
 
     // GET:account/remove/id
     remove(id) { // warning! this is not an API endpoint 
-        // todo make sure that the requester has legitimity to delete ethier itself or its an admin
-        if (AccessControl.writeGrantedAdminOrOwner(this.HttpContext.authorizations, this.requiredAuthorizations, id)) {
-            // todo
-        }
+        let userId = this.HttpContext.path.params.userToRemove;
+        let resquestedByAdmin = this.HttpContext.path.params.requestByAdmin === 'true';
+        let permissionGranted = false;
+
+        if (this.repository != null) {
+            let storedUser = this.repository.findByField("Id", userId);
+            if (storedUser != null) {
+                if (resquestedByAdmin)
+                    permissionGranted = AccessControl.writeGranted(this.HttpContext.authorizations, AccessControl.admin())
+                else
+                    permissionGranted = this.HttpContext.user.Id == storedUser.Id
+
+                if (permissionGranted) {
+                    PostModel.removeLikes(id);
+                    this.repository.remove(id)
+                    let removed = !(this.repository.get(id));
+
+                    if (this.repository.model.state.isValid)
+                        this.HttpContext.response.JSON(removed);
+                    else if (this.repository.model.state.inConflict)
+                        this.HttpContext.response.conflict(this.repository.model.state.errors);
+                    else
+                        this.HttpContext.response.badRequest(this.repository.model.state.errors);
+                } else
+                    this.HttpContext.response.unAuthorized();
+            } else
+                this.HttpContext.response.notFound();
+        } else
+            this.HttpContext.response.notImplemented();
     }
 }

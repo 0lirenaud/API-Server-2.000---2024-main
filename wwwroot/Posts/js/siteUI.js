@@ -250,11 +250,11 @@ function renderPost(post, loggedUser) {
             `<span class="cmdIconSmall ${!userLiked ? "fa-regular" : "fa-solid"} fa-thumbs-up" id="${sessionUser != null ? "toggleLike" : ""}" postId="${post.Id}" 
             title="${likeNames}"></span><span class="postLikes">${post.Likes.length}</span>`
     if (sessionUser != null) {
-        crudIcon = sessionUser.Id == post.OwnerId ? 
+        crudIcon = sessionUser.Id == post.OwnerId || sessionUser.isSuperUser ? 
             `
             <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
             ` : "<span>&nbsp</span>";
-        crudIcon += sessionUser.Id == post.OwnerId || sessionUser.isAdmin ?
+        crudIcon += sessionUser.Id == post.OwnerId || sessionUser.isAdmin || sessionUser.isSuperUser ?
             `
             <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
             ` : `<span>&nbsp</span>`;
