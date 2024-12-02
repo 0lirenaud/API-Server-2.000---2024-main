@@ -20,10 +20,6 @@ let keywordsOnchangeTimger = null;
 Init_UI();
 async function Init_UI() {
     postsPanel = new PageManager('postsScrollPanel', 'postsPanel', 'postSample', renderPosts);
-    if(sessionUser != null && sessionUser != 'undefined')
-        if(sessionUser.isSuperUser || sessionUser.isAdmin)
-            $('#createPost').show();
-
     $('#createPost').on("click", async function () {
         showCreatePostForm();
     });
@@ -86,7 +82,6 @@ function cleanSearchKeywords() {
     $("#searchKeys").val(cleanedKeywords.trim());
 }
 function showSearchIcon() {
-    $("#hiddenIcon").hide();
     $("#showSearch").show();
     if (showKeywords) {
         $("#searchKeys").show();
@@ -115,9 +110,14 @@ function toogleShowKeywords() {
 //#region Views management
 function intialView() {
     if(sessionUser != null && sessionUser != 'undefined')
-        if(sessionUser.isSuperUser || sessionUser.isAdmin)
+        if(sessionUser.isSuperUser || sessionUser.isAdmin) {
             $("#createPost").show();
-    $("#hiddenIcon").hide();
+            $('#hiddenIcon').hide();
+        }
+        else
+            $('#hiddenIcon').show();
+    else
+        $('#hiddenIcon').show();
     $("#hiddenIcon2").hide();
     $('#menu').show();
     $('#commit').hide();
@@ -534,11 +534,14 @@ function newPost() {
     Post.Image = "news-logo-upload.png";
     Post.Category = "";
     Post.OwnerId = sessionUser.Id;
+    Post.Likes = [];
     return Post;
 }
 function renderPostForm(post = null) {
     let create = post == null;
+    let likes = [];
     if (create) post = newPost();
+    else likes = post.Likes;
     $("#form").show();
     $("#form").empty();
     $("#form").append(`
@@ -603,6 +606,10 @@ function renderPostForm(post = null) {
     $('#postForm').on("submit", async function (event) {
         event.preventDefault();
         let post = getFormData($("#postForm"));
+        likes.forEach((element) => {
+            delete element.UserName;
+        });
+        post.Likes = likes;
         if (post.Category != selectedCategory)
             selectedCategory = "";
         if (create || !('keepDate' in post))

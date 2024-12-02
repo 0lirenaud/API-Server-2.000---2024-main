@@ -228,6 +228,7 @@ async function renderUserForm(user = null) {
 }
 async function renderUserConnectForm(instructMsg = "") {
     hidePosts();
+    $('#hiddenIcon2').show();
     $('#form').show();
     $('#form').empty();
     $('#abort').show();
@@ -289,6 +290,8 @@ async function renderUserConnectForm(instructMsg = "") {
                 $('#passwordError').text('Mot de passe incorrect');
             else if (Accounts_API.currentStatus == 481)
                 $('#emailError').text('Courriel introuvable');
+            else if (Accounts_API.currentStatus == 401)
+                $('#passwordError').text(Accounts_API.currentHttpError);
             else
                 $('#passwordError').text(Accounts_API.error);
         }
@@ -363,6 +366,7 @@ async function toggleBlocked($this, title, id) {
 }
 async function renderUsersList() {
     hidePosts();
+    $('#hiddenIcon2').show();
     $('#form').show();
     $('#abort').show();
     changeMainTitle('Gestion des utilisateurs');

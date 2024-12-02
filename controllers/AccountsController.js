@@ -30,7 +30,9 @@ export default class AccountsController extends Controller {
             if (this.repository != null) {
                 let user = this.repository.findByField("Email", loginInfo.Email);
                 if (user != null) {
-                    if (user.Password == loginInfo.Password) {
+                    if(user.Authorizations.readAccess == -1)
+                        this.HttpContext.response.unAuthorized('Votre compte a été bloqué par un administrateur.');
+                    else if (user.Password == loginInfo.Password) {
                         user = this.repository.get(user.Id);
                         let newToken = TokenManager.create(user);
                         this.HttpContext.response.created(newToken);
