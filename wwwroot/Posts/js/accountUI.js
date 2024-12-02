@@ -6,12 +6,6 @@ const USER_BLOCKED_HTML = { desc: 'Bloquer ', state: '<i class="fa-solid fa-chec
 const USER_UNBLOCKED_HTML = { desc: 'Débloquer ', state: '<i class="fa fa-ban" style="color: #ff0000;"></i>' };
 const TYPES = [USER_READONLY_HTML, SUPER_USER_HTML, ADMIN_HTML];
 let sessionUser = sessionStorage.getItem('user') == 'undefined' ? null : JSON.parse(sessionStorage.getItem('user'));
-//#region User form rendering
-
-if (sessionUser != null) {
-    initTimeout(TIMEOUT_TIME, logout);
-    timeout();
-}
 let verifyMessage = `
     Votre compte a été crée. Veuillez
     vérifier vos courriers, afin de récupérer votre code de vérification
@@ -20,7 +14,12 @@ let changedEmailMessage = `
     Suite à votre changement de courriel, veuillez récupérer le nouveau code
     de vérification dans vos courriers pour poursuivre votre connexion. Merci !`
 var userToVerify;
+if (sessionUser != null) {
+    initTimeout(TIMEOUT_TIME, logout);
+    timeout();
+}
 
+//#region User form rendering
 function changeMainTitle(msg = 'Fil de nouvelles', color = null) {
     $('#viewTitle').text(msg);
     $('#viewTitle').css('color', color || 'black');
@@ -312,11 +311,11 @@ async function renderUserConnectForm(instructMsg = "") {
 function userTypeLogo(u) {
     return u.isAdmin ? ADMIN_HTML : u.isSuperUser ? SUPER_USER_HTML : USER_READONLY_HTML;
 }
-function userBlocked(u) {
+function userBlockedLogo(u) {
     return u.isBlocked ? USER_UNBLOCKED_HTML : USER_BLOCKED_HTML;
 }
 function userRegularOptions(u) {
-    const { desc, state } = userBlocked(u);
+    const { desc, state } = userBlockedLogo(u);
     return !(u.isAdmin || u.isSuperUser) ? `
     <div title="${desc + u.Name}" class="blockUser">${state}</div>
     <div title="${'Supprimer ' + u.Name}"class="deleteAccount"><i class="fa-solid fa-circle-xmark"></i></div>
@@ -376,6 +375,7 @@ async function renderUsersList() {
             if (b.isSuperUser && !(a.isAdmin || a.isSuperUser)) return -1;
             return a.Name > b.Name ? 1 : a.Name < b.Name ? -1 : 0;
         }).filter(u => u.Id !== sessionUser.Id);
+        
     $("#form").append(`
         <div id="usersContainer">
             ${users.map(user => {
