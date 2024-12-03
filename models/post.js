@@ -39,7 +39,7 @@ export default class Post extends Model {
     }
     static removeLikes(userId) {
         let postRepository = new Repository(new Post())
-        let posts = postRepository.getAll();
+        let posts = postRepository.getAll(null, true);
         let indexesToDelete = []
 
         //Post deletion part
@@ -54,7 +54,7 @@ export default class Post extends Model {
             });
 
         //Post like part
-        posts = postRepository.getAll();
+        posts = postRepository.getAll(null, true);
         posts.forEach(post => {
             let likes = post.Likes;
             if (likes.length > 0) {
