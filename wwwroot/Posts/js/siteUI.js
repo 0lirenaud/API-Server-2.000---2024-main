@@ -249,11 +249,10 @@ function renderPost(post, loggedUser) {
     });
 
     if (sessionUser != null) {
-        if (!sessionUser.isAdmin) {
+        if (!sessionUser.isAdmin)
             likeIcon =
                 `<span class="cmdIconSmall ${!userLiked ? "fa-regular" : "fa-solid"} fa-thumbs-up" id="${sessionUser != null ? "toggleLike" : ""}" postId="${post.Id}" 
                 title="${likeNames}"></span><span class="postLikes">${post.Likes.length}</span>`
-        }
         else
             crudIcon = `<span>&nbsp</span><span>&nbsp</span>`;
 
