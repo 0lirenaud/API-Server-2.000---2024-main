@@ -252,10 +252,13 @@ function renderPost(post, loggedUser) {
         if (!sessionUser.isAdmin) {
             likeIcon =
                 `<span class="cmdIconSmall ${!userLiked ? "fa-regular" : "fa-solid"} fa-thumbs-up" id="${sessionUser != null ? "toggleLike" : ""}" postId="${post.Id}" 
-        title="${likeNames}"></span><span class="postLikes">${post.Likes.length}</span>`
+                title="${likeNames}"></span><span class="postLikes">${post.Likes.length}</span>`
         }
+        else
+            crudIcon = `<span>&nbsp</span><span>&nbsp</span>`;
 
-        crudIcon = sessionUser.Id == post.OwnerId || sessionUser.isSuperUser ?
+
+        crudIcon += sessionUser.Id == post.OwnerId || sessionUser.isSuperUser ?
             `
             <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
             ` : "<span>&nbsp</span>";
