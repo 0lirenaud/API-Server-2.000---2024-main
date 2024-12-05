@@ -63,7 +63,7 @@ export default class Post extends Model {
                     let idx = likes.indexOf(like);
                     likes.splice(idx, 1);
                     post.Likes = likes;
-                    postRepository.update(post.Id, post);
+                    postRepository.update(post.Id, post, false);
                 }
             }
         });

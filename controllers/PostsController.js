@@ -22,7 +22,7 @@ export default class PostModelsController extends Controller {
                 if(!removed)
                     post.Likes.push({'UserId': data.userId});
                 
-                let updatedPost = this.repository.update(post.Id, post);
+                let updatedPost = this.repository.update(post.Id, post, false);
                 updatedPost = this.repository.get(post.Id);
                 if (this.repository.model.state.isValid)
                     this.HttpContext.response.JSON(updatedPost);

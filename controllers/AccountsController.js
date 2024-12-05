@@ -87,7 +87,7 @@ export default class AccountsController extends Controller {
             if (userFound) {
                 if (userFound.VerifyCode == code) {
                     userFound.VerifyCode = "verified";
-                    this.repository.update(userFound.Id, userFound);
+                    this.repository.update(userFound.Id, userFound, false);
                     if (this.repository.model.state.isValid) {
                         userFound = this.repository.get(userFound.Id); // get data binded record
                         this.HttpContext.response.JSON(userFound);
@@ -147,7 +147,7 @@ export default class AccountsController extends Controller {
             else if (userExtraData.isSuperUser) storedUser.Authorizations = AccessControl.admin();
             else storedUser.Authorizations = AccessControl.superUser();
 
-            this.repository.update(user.Id, storedUser);
+            this.repository.update(user.Id, storedUser, false);
             let updatedUser = this.repository.get(user.Id); // must get record user.id with binded data
             if (this.repository.model.state.isValid)
                 this.HttpContext.response.JSON(updatedUser);
@@ -164,7 +164,7 @@ export default class AccountsController extends Controller {
             if (userExtraData.isBlocked) storedUser.Authorizations = AccessControl.userReadOnly();
             else storedUser.Authorizations = AccessControl.blocked();
 
-            this.repository.update(user.Id, storedUser);
+            this.repository.update(user.Id, storedUser, false);
             let updatedUser = this.repository.get(user.Id); // must get record user.id with binded data
             if (this.repository.model.state.isValid)
                 this.HttpContext.response.JSON(updatedUser);

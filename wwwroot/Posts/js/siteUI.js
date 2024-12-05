@@ -257,11 +257,11 @@ function renderPost(post, loggedUser) {
             crudIcon = `<span>&nbsp</span><span>&nbsp</span>`;
 
 
-        crudIcon += sessionUser.Id == post.OwnerId && sesssionUser.isSuperUser ?
+        crudIcon += sessionUser.Id == post.OwnerId && sessionUser.isSuperUser ?
             `
             <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
             ` : "<span>&nbsp</span>";
-        crudIcon += (sessionUser.Id == post.OwnerId && sesssionUser.isSuperUser) || sessionUser.isAdmin ?
+        crudIcon += (sessionUser.Id == post.OwnerId && sessionUser.isSuperUser) || sessionUser.isAdmin ?
             `
             <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
             ` : `<span>&nbsp</span>`;

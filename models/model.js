@@ -84,17 +84,15 @@ export default class Model {
     handleAssets(instance, storedInstance = null) {
         this.fields.forEach(field => {
             if ((field.name in instance) && (field.type == "asset")) {
-                let currrentImage = instance[field.name];
-
-                if (currrentImage && currrentImage.includes('http'))
-                    currrentImage = currrentImage.split('/').pop();
-                if (!currrentImage && storedInstance) {
-                    currrentImage = storedInstance[field.name];
-                } else if (storedInstance == null) {
+                if (instance[field.name] == '') {
+                    if (storedInstance != null) {
+                        instance[field.name] = storedInstance[field.name];
+                    }
+                } else {
                     instance[field.name] = AssetsRepository.save(instance[field.name]);
-                } else if (currrentImage != storedInstance[field.name]) {
-                    AssetsRepository.remove(storedInstance[field.name]);
-                    instance[field.name] = AssetsRepository.save(instance[field.name]);
+                    if (storedInstance != null) {
+                        AssetsRepository.remove(storedInstance[field.name]);
+                    }
                 }
             }
         });
