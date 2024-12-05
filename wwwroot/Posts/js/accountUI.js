@@ -242,12 +242,12 @@ async function renderUserConnectForm(instructMsg = "") {
         <form class="form loginForm" id="userForm">
             <div>
                 <input 
-                    class="form-control"
+                    class="form-control Email"
                     name="Email"
                     id="Email"
                     placeholder="Courriel"
                     RequireMessage="Veuillez entrer un courriel"
-                    InvalidMessage="Courriel introuvable"
+                    InvalidMessage="Le format du courriel est invalide"
                     required
                 />
                 <span class="errorMessage" id="emailError"></span>
