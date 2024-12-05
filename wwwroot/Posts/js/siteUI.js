@@ -223,7 +223,7 @@ async function renderPosts(queryString) {
         let Posts = response.data;
         if (Posts.length > 0) {
             Posts.forEach(Post => {
-                postsPanel.itemsPanel.append(renderPost(Post));
+                postsPanel.append(renderPost(Post));
             });
         } else
             endOfData = true;
@@ -257,11 +257,11 @@ function renderPost(post, loggedUser) {
             crudIcon = `<span>&nbsp</span><span>&nbsp</span>`;
 
 
-        crudIcon += sessionUser.Id == post.OwnerId || sessionUser.isSuperUser ?
+        crudIcon += sessionUser.Id == post.OwnerId && sesssionUser.isSuperUser ?
             `
             <span class="editCmd cmdIconSmall fa fa-pencil" postId="${post.Id}" title="Modifier nouvelle"></span>
             ` : "<span>&nbsp</span>";
-        crudIcon += sessionUser.Id == post.OwnerId || sessionUser.isAdmin || sessionUser.isSuperUser ?
+        crudIcon += (sessionUser.Id == post.OwnerId && sesssionUser.isSuperUser) || sessionUser.isAdmin ?
             `
             <span class="deleteCmd cmdIconSmall fa fa-trash" postId="${post.Id}" title="Effacer nouvelle"></span>
             ` : `<span>&nbsp</span>`;
