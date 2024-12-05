@@ -316,10 +316,19 @@ async function renderUserConnectForm(instructMsg = "") {
 
 //#region User Management
 function userListeners() {
+    $(".promoteUser").off();
+    $(".promoteUser").on('click', async function () {
+        let $this = $(this);
+        let id = $this.parent().data('id');
+        let title = $this.attr('title');
+        await toggleType($this, title, id);
+    });
+    $(".deleteAccount").off()
     $(".deleteAccount").on('click', function () {
         let id = $(this).parent().data('id');
         confirmDelete(id, true);
     });
+    $('.blockUser').off();
     $('.blockUser').on('click', async function () {
         let $this = $(this);
         let id = $this.parent().data('id');
@@ -335,7 +344,7 @@ function userBlockedLogo(u) {
 }
 function userRegularOptions(u) {
     const { desc, state } = userBlockedLogo(u);
-    return !(u.isAdmin || u.isSuperUser) ? `
+    return (!u.isAdmin) ? `
     <div title="${desc + u.Name}" class="blockUser">${state}</div>
     <div title="${'Supprimer ' + u.Name}"class="deleteAccount"><i class="fa-solid fa-circle-xmark"></i></div>
     ` : ``
@@ -362,6 +371,7 @@ function confirmDelete(id, adminRequest = false) {
         }
     });
 }
+
 async function deleteUser(id, adminRequest) {
     let deleted = await Accounts_API.Delete(id, adminRequest);
     return typeof deleted != 'string';
@@ -372,17 +382,20 @@ async function toggleType($this, title, id) {
     index = (index == TYPES.length - 1) ? 0 : index + 1;
     $this.attr('title', TYPES[index].title);
     $this.html(TYPES[index].logo);
-    if (TYPES[index].title == USER_READONLY_HTML.title) {
-        $this.after(userRegularOptions(u))
-        userListeners()
-    }
-    else if ($this.siblings().length > 0)
+    if ($this.siblings().length > 0)
         $this.siblings().remove();
+    $this.after(userRegularOptions(u))
+    userListeners()
 }
 async function toggleBlocked($this, title, id) {
     let u = await Accounts_API.Block(id);
+    if(u.isBlocked)
+        $this.prev('.promoteUser').remove();
+    else
+        $this.closest('.options').prepend(`<div title="${USER_READONLY_HTML.title}" class="promoteUser">${USER_READONLY_HTML.logo}</div>`);
     $this.attr('title', title.includes(USER_BLOCKED_HTML.desc) ? USER_UNBLOCKED_HTML.desc : USER_BLOCKED_HTML.desc);
     $this.html(title.includes(USER_BLOCKED_HTML.desc) ? USER_UNBLOCKED_HTML.state : USER_BLOCKED_HTML.state);
+    userListeners();
 }
 async function renderUsersList() {
     hidePosts();
@@ -401,13 +414,14 @@ async function renderUsersList() {
             ${users.map(user => {
         const { title, logo } = userTypeLogo(user);
         const regularUserChoices = userRegularOptions(user);
+        const promoteUserIcon = user.isBlocked ? `` : `<div title="${title}" class="promoteUser">${logo}</div>`;
         return `<div class="userRow">
                     <div class="userInfo">
                         <div><img class="userIconMenu" src="${user.Avatar}" /></div>
                         <div class="postUserName">${user.Name}</div>
                     </div>
                     <div class="options" data-id="${user.Id}">
-                        <div title="${title}" class="promoteUser">${logo}</div>`
+                        ${promoteUserIcon}`
             +
             regularUserChoices
             +
@@ -415,12 +429,6 @@ async function renderUsersList() {
                 </div>`}).join('')}
         </div>
     `);
-    $(".promoteUser").on('click', async function () {
-        let $this = $(this);
-        let id = $this.parent().data('id');
-        let title = $this.attr('title');
-        await toggleType($this, title, id);
-    });
     userListeners();
 }
 //#endregion
