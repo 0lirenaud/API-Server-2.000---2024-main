@@ -230,7 +230,7 @@ async function renderUserForm(user = null) {
             confirmDelete(sessionUser.Id)
         });
 }
-async function renderUserConnectForm(instructMsg = "") {
+async function renderUserConnectForm(instructMsg = "", color='black') {
     hidePosts();
     $('#hiddenIcon2').show();
     $('#form').show();
@@ -238,7 +238,7 @@ async function renderUserConnectForm(instructMsg = "") {
     $('#abort').show();
     changeMainTitle('Connexion');
     $("#form").append(`
-        <div id="instructions" style="display:${instructMsg ? "block" : "none"}">${instructMsg}</div>
+        <div id="instructions" style="display:${instructMsg ? "block" : "none"}; color: ${color}">${instructMsg}</div>
         <form class="form loginForm" id="userForm">
             <div>
                 <input 
@@ -437,7 +437,7 @@ async function logout() {
     await Accounts_API.Logout(sessionUser.Id);
     if (!Accounts_API.error) {
         sessionUser = null;
-        await renderUserConnectForm();
+        await renderUserConnectForm('Votre session est expirée. Veuillez vous reconnecter', 'red');
         noTimeout();
     }
     else
