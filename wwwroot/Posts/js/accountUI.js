@@ -303,9 +303,6 @@ async function renderUserConnectForm(instructMsg = "", color='black') {
     $('#createNewAccount').on("click", async function () {
         await renderUserForm();
     });
-    $('#abort').on("click", async function () {
-        await showPosts();
-    });
     $('input').on('keydown', function () {
         $('.errorMessage').each(function () {
             $(this).text('');
