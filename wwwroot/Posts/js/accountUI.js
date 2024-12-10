@@ -433,11 +433,14 @@ async function renderUsersList() {
 }
 //#endregion
 
-async function logout() {
+async function logout(timeout = false) {
     await Accounts_API.Logout(sessionUser.Id);
     if (!Accounts_API.error) {
         sessionUser = null;
-        await renderUserConnectForm('Votre session est expirée. Veuillez vous reconnecter', 'red');
+        if (timeout)
+            await renderUserConnectForm('Votre session est expirée. Veuillez vous reconnecter', 'red');
+        else
+            renderUserConnectForm();
         noTimeout();
     }
     else

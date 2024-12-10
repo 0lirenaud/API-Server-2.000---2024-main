@@ -50,7 +50,7 @@ function startCountdown() {
                 if (timeLeft <= -timeBeforeRedirect) {
                     clearTimeout(currentTimeouID);
                     closePopup();
-                    timeoutCallBack();
+                    timeoutCallBack(true);
                 }
             }
         }, 1000);
